@@ -1,6 +1,4 @@
-using UnityEngine;
-
-public class Fruit : MonoBehaviour, IFruit
+public class Fruit : IFruit
 {
     private string fruitName;
     private int energyAmount;

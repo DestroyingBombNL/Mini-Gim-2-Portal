@@ -8,13 +8,23 @@ public class ServiceBootstrapper : MonoBehaviour
 
     void Awake()
     {
-        treeSystem = FindFirstObjectByType<TreeSystem>();
-        ServiceLocator.Register<ITreeSystem>(treeSystem);
+        if (resourceSystem == null) //Has to go first due to treeSyste
+        {
+            resourceSystem = FindFirstObjectByType<ResourceSystem>();
+        }
+        ServiceLocator.Register(resourceSystem);
 
-        unitSystem = FindFirstObjectByType<UnitSystem>();
-        ServiceLocator.Register<IUnitSystem>(unitSystem);
-        
-        resourceSystem = FindFirstObjectByType<ResourceSystem>();
-        ServiceLocator.Register<IResourceSystem>(resourceSystem);
+        if (treeSystem == null)
+        {
+            treeSystem = FindFirstObjectByType<TreeSystem>();
+        }
+        ServiceLocator.Register(treeSystem);
+
+        if (unitSystem == null)
+        {
+            unitSystem = FindFirstObjectByType<UnitSystem>();
+        }
+        ServiceLocator.Register(unitSystem);
+
     }
 }

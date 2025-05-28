@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ResourceSystem : MonoBehaviour, IResourceSystem
 {
-    private int energyAmount;
+    [SerializeField] private int energyAmount;
     public int GetEnergy()
     {
         return this.energyAmount;

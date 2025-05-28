@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class Scavenger : Unit
 {
-    [SerializeField] Animator animator;
+    [SerializeField] private Animator animator;
+    [SerializeField] private GameObject fruitPrefab;
     private ResourceSystem resourceSystem;
     private TreeSystem treeSystem;
     private Transform targetTreeTransform;
     private ITree targetTreeScript;
-    private GameObject fruitPrefab;
     private IFruit fruitInventory;
     private Action OnScavenging;
     private Action OnCollecting;
@@ -42,7 +42,7 @@ public class Scavenger : Unit
     private void TriggerScavenging() => OnScavenging?.Invoke();
     private void TriggerCollecting() => OnCollecting?.Invoke();
     private void TriggerReturning() => OnReturning?.Invoke();
-    private void TriggerOffLoading() => OnReturning?.Invoke();
+    private void TriggerOffLoading() => OnOffLoading?.Invoke();
 
     private void HandleScavenging()
     {

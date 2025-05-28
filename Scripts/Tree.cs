@@ -26,8 +26,9 @@ public class Tree : MonoBehaviour, ITree
 
     public void AddScavenger(Scavenger scavenger)
     {
-        int filledCount = this.scavengers.Count(s => s != null); 
-        this.scavengers[filledCount] = scavenger;
+        int filledCount = this.scavengers.Count(s => s != null);
+        int index = filledCount - 1;
+        this.scavengers[index] = scavenger;
     }
 
     public void RemoveScavenger(Scavenger scavenger)
@@ -52,8 +53,10 @@ public class Tree : MonoBehaviour, ITree
             return null;
         }
 
-        Fruit fruitClone = fruits[filledCount].Clone();
-        fruits[filledCount] = null;
+        int index = filledCount - 1;
+        Debug.Log("filledCount: " + filledCount);
+        Fruit fruitClone = fruits[index].Clone();
+        fruits[index] = null;
         return fruitClone;
     }
 }
