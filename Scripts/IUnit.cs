@@ -1,16 +1,9 @@
 using UnityEngine;
 
-public class IUnit : MonoBehaviour
+public interface IUnit
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public void SetAlliedPortalTransform(Transform transform);
+    public void SetEnemyPortalTransform(Transform transform);
+    public void TakeDamage(int damage);
+    public int GetEnergyCost();
 }

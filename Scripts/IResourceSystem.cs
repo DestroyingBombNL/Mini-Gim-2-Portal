@@ -1,16 +1,9 @@
-using UnityEngine;
-
-public class IResourceSystem : MonoBehaviour
+public interface IResourceSystem
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public int GetEnergy();
+    public void SetEnergy(int amount);
+    public void AddEnergy(int amount);
+    public void AddEnergy(IFruit fruit);
+    public bool RemoveEnergy(int amount);
+    public bool RemoveEnergy(IUnit unit);               
 }

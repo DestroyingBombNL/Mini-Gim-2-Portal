@@ -2,15 +2,19 @@ using UnityEngine;
 
 public class ServiceBootstrapper : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private TreeSystem treeSystem;
+    [SerializeField] private UnitSystem unitSystem;
+    [SerializeField] private ResourceSystem resourceSystem;
 
-    // Update is called once per frame
-    void Update()
+    void Awake()
     {
+        treeSystem = FindFirstObjectByType<TreeSystem>();
+        ServiceLocator.Register<ITreeSystem>(treeSystem);
+
+        unitSystem = FindFirstObjectByType<UnitSystem>();
+        ServiceLocator.Register<IUnitSystem>(unitSystem);
         
+        resourceSystem = FindFirstObjectByType<ResourceSystem>();
+        ServiceLocator.Register<IResourceSystem>(resourceSystem);
     }
 }

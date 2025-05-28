@@ -1,16 +1,22 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SpawnUnitButton : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] private Button button;
+    [SerializeField] private Image imageRenderer;
+    [SerializeField] private Sprite sprite;
+    [SerializeField] private EUnit unitType;
+    private UnitSystem unitSystem;
+
     void Start()
     {
-        
-    }
+        this.unitSystem = ServiceLocator.Get<UnitSystem>();
+        this.imageRenderer.sprite = this.sprite;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        this.button.onClick.AddListener(() =>
+        {
+            this.unitSystem.SpawnUnit(unitType);
+        });
     }
 }

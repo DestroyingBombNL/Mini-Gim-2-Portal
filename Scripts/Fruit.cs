@@ -1,16 +1,33 @@
 using UnityEngine;
 
-public class Fruit : MonoBehaviour
+public class Fruit : MonoBehaviour, IFruit
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private string fruitName;
+    private int energyAmount;
+
+    public Fruit(string fruitName, int energyAmount)
     {
-        
+        this.fruitName = fruitName;
+        this.energyAmount = energyAmount;
     }
 
-    // Update is called once per frame
-    void Update()
+    public int GetEnergyAmount()
     {
-        
+        return this.energyAmount;
+    }
+
+    public Fruit Clone()
+    {
+        return new Fruit(
+            this.fruitName,
+            this.energyAmount
+        );
+    }
+
+    public bool IsClone(Fruit fruit)
+    {
+        return
+        this.fruitName == fruit.fruitName &&
+        this.energyAmount == fruit.energyAmount;
     }
 }

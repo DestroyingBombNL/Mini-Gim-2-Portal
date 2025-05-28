@@ -1,16 +1,5 @@
-using UnityEngine;
-
-public class IUnitSystem : MonoBehaviour
+public interface IUnitSystem
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public void SpawnUnit(EUnit unitType);
+    public void TakeDamage(int damage);
 }

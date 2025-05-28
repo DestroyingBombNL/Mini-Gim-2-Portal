@@ -1,16 +1,7 @@
-using UnityEngine;
-
-public class ITree : MonoBehaviour
+public interface ITree
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public ETeam GetTeam();
+    public void AddScavenger(Scavenger scavenger);
+    public void RemoveScavenger(Scavenger scavenger);
+    public Fruit RemoveFruit(int amount);
 }
