@@ -56,8 +56,9 @@ public class Scavenger : Unit
         Debug.Log("Drone is collecting...");
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(PlayAnimationThen("Collecting", TriggerReturning));
-        Vector3 spawnPosition = transform.position + new Vector3(0, -4f, 0);
-        Instantiate(fruitPrefab, spawnPosition, Quaternion.identity, this.transform);
+
+        PlayFruitAnimation("Float");
+
         IFruit collectedFruit = targetTreeScript.RemoveFruit(1);
         fruitInventory = collectedFruit;
     }
@@ -74,13 +75,16 @@ public class Scavenger : Unit
         Debug.Log("Drone is offLoading...");
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(PlayAnimationThen("OffLoading", TriggerScavenging));
+
+        PlayFruitAnimation("Drop");
+
         this.resourceSystem.AddEnergy(fruitInventory);
         this.fruitInventory = null;
     }
 
     private IEnumerator MoveAndAnimate(Vector3 target, string animName, Action onArrive)
     {
-        //animator.Play(animName);
+        animator.Play(animName);
 
         while (Vector3.Distance(transform.position, target) > 0.1f)
         {
@@ -93,25 +97,34 @@ public class Scavenger : Unit
 
     private IEnumerator PlayAnimationThen(string animName, Action onComplete)
     {
-        //animator.Play(animName);
+        animator.Play(animName);
 
         // Find the clip length
-        float duration = GetAnimationLength(animName);
+        float duration = GetAnimationLength(animator, animName);
         yield return new WaitForSeconds(duration);
 
         onComplete?.Invoke();
     }
 
-    private float GetAnimationLength(string animName)
+    private float GetAnimationLength(Animator targetAnimator, string animName)
     {
-        // AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
-        // foreach (var clip in clips)
-        // {
-        //     if (clip.name == animName)
-        //         return clip.length;
-        // }
+        AnimationClip[] clips = targetAnimator.runtimeAnimatorController.animationClips;
+        foreach (var clip in clips)
+        {
+            if (clip.name == animName)
+                return clip.length;
+        }
 
         Debug.LogWarning($"Animation '{animName}' not found!");
         return 1f;
+    }
+
+    private void PlayFruitAnimation(string animName)
+    {
+        GameObject fruitGameObject = Instantiate(fruitPrefab, this.transform.position, Quaternion.identity, this.transform);
+        Animator fruitAnimator = fruitGameObject.GetComponent<Animator>();
+        fruitAnimator.Play(animName);
+        float floatAnimLength = GetAnimationLength(fruitAnimator, animName);
+        Destroy(fruitGameObject, floatAnimLength);
     }
 }
