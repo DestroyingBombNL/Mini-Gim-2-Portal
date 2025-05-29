@@ -4,6 +4,7 @@ using UnityEngine;
 public class Tree : MonoBehaviour, ITree
 {
     [SerializeField] private ETeam team;
+    [SerializeField] private int fruitEnergyAmount;
     private Scavenger[] scavengers = new Scavenger[2];
     private Fruit[] fruits = new Fruit[100];
 
@@ -15,7 +16,7 @@ public class Tree : MonoBehaviour, ITree
     {
         for (int i = 0; i < fruits.Length; i++)
         {
-            fruits[i] = new Fruit("Luminberry", 5);
+            fruits[i] = new Fruit("Luminberry", fruitEnergyAmount);
         }
     }
 
@@ -26,8 +27,8 @@ public class Tree : MonoBehaviour, ITree
 
     public void AddScavenger(Scavenger scavenger)
     {
-        int filledCount = this.scavengers.Count(s => s != null);
-        int index = filledCount - 1;
+        int scavengerCapacity = GetScavengerCurrentCapacity();
+        int index = scavengerCapacity;
         this.scavengers[index] = scavenger;
     }
 
@@ -45,18 +46,28 @@ public class Tree : MonoBehaviour, ITree
 
     public Fruit RemoveFruit(int amount)
     {
-        int filledCount = this.fruits.Count(s => s != null);
+        int fruitCapacity = this.fruits.Count(s => s != null);
 
-        if (filledCount == 0)
+        if (fruitCapacity == 0)
         {
             Debug.Log("No Fruits Left");
             return null;
         }
 
-        int index = filledCount - 1;
-        Debug.Log("filledCount: " + filledCount);
+        int index = fruitCapacity - 1;
+
         Fruit fruitClone = fruits[index].Clone();
         fruits[index] = null;
         return fruitClone;
+    }
+
+    public int GetScavengerCurrentCapacity()
+    {
+        return this.scavengers.Count(s => s != null);
+    }
+    
+    public int GetScavengerMaxCapacity()
+    {
+        return this.scavengers.Length;
     }
 }

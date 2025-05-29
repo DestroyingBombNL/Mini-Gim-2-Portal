@@ -16,6 +16,9 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
     [SerializeField] private Transform alliedPortalTransform;
     [SerializeField] private Transform enemyPortalTransform;
     [SerializeField] private List<UnitPrefabEntry> unitPrefabList;
+    [SerializeField] private float spawnYOffsetMin; //0.25f
+    [SerializeField] private float spawnYOffsetMax; //0.5f
+    [SerializeField] private Transform unitTransform; //Where units in Editor spawn
     private IResourceSystem resourceSystem;
 
     void Start()
@@ -31,18 +34,19 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
             OnDefeated();
         }
     }
-    
+
+    public ETeam GetTeam()
+    {
+        return this.team;
+    }
+
     public void SpawnUnit(EUnit unitType)
     {
-        GameObject unitGameObject = null;
+        GameObject unitGameObject = getUnitGameObject(unitType);
 
-        foreach (var entry in unitPrefabList)
+        if (this.resourceSystem == null)
         {
-            if (entry.unit == unitType)
-            {
-                unitGameObject = entry.prefab;
-                break;
-            }
+            this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
         }
 
         if (unitGameObject == null)
@@ -54,7 +58,9 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         IUnit unitScript = unitGameObject.GetComponent<IUnit>();
         if (this.resourceSystem.RemoveEnergy(unitScript))
         {
-            GameObject instantiatedUnit = Instantiate(unitGameObject, this.transform.position, Quaternion.identity);
+            Vector3 spawnPosition = this.transform.position;
+            spawnPosition.y += UnityEngine.Random.Range(spawnYOffsetMin, spawnYOffsetMax);
+            GameObject instantiatedUnit = Instantiate(unitGameObject, spawnPosition, Quaternion.identity, unitTransform);
             IUnit instantiatedUnitScript = instantiatedUnit.GetComponent<IUnit>();
             instantiatedUnitScript.SetAlliedPortalTransform(alliedPortalTransform);
             instantiatedUnitScript.SetEnemyPortalTransform(enemyPortalTransform);
@@ -64,5 +70,20 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
     public void OnDefeated()
     {
         Debug.Log("Game Over");
+    }
+
+    public GameObject getUnitGameObject(EUnit unitType)
+    {
+        GameObject unitGameObject = null;
+
+        foreach (var entry in unitPrefabList)
+        {
+            if (entry.unit == unitType)
+            {
+                unitGameObject = entry.prefab;
+                break;
+            }
+        }
+        return unitGameObject;
     }
 }

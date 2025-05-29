@@ -8,7 +8,7 @@ public class ServiceBootstrapper : MonoBehaviour
 
     void Awake()
     {
-        if (resourceSystem == null) //Has to go first due to treeSyste
+        if (resourceSystem == null)
         {
             resourceSystem = FindFirstObjectByType<ResourceSystem>();
         }

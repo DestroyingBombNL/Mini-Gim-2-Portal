@@ -2,17 +2,21 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public Transform backgroundParent; // Assign the GameObject containing all background parts
-    public float dragSpeed = 0.01f;
-
+    [SerializeField] private Transform environmentTransform;
+    [SerializeField] private float initialMoveSpeed = 10f;
+    [SerializeField] private float targetMoveSpeed = 20f;
+    [SerializeField] private float accelerationRate = 5f; // Units per second
+    private float currentMoveSpeed;
+    [SerializeField] private float dragSpeed; //0.01f
     private float minX, maxX;
     private Vector3 lastMousePosition;
     private float cameraHalfWidth;
 
     void Start()
     {
-        Bounds combinedBounds = CalculateCombinedBounds(backgroundParent);
+        currentMoveSpeed = initialMoveSpeed;
+
+        Bounds combinedBounds = CalculateCombinedBounds(environmentTransform);
         cameraHalfWidth = Camera.main.orthographicSize * Camera.main.aspect;
 
         minX = combinedBounds.min.x + cameraHalfWidth;
@@ -21,16 +25,19 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        // Smoothly increase move speed up to target
+        currentMoveSpeed = Mathf.MoveTowards(currentMoveSpeed, targetMoveSpeed, accelerationRate * Time.deltaTime);
+
         HandleKeyboardInput();
         HandleMouseDrag();
 
         // Lock Y and Z
         Vector3 pos = transform.position;
-        pos.y = Camera.main.transform.position.y; // Or a fixed value like 0
+        pos.y = Camera.main.transform.position.y;
         pos.z = Camera.main.transform.position.z;
         transform.position = pos;
 
-        // Clamp camera within background bounds
+        // Clamp within bounds
         transform.position = new Vector3(
             Mathf.Clamp(transform.position.x, minX, maxX),
             transform.position.y,
@@ -40,8 +47,8 @@ public class CameraController : MonoBehaviour
 
     private void HandleKeyboardInput()
     {
-        float horizontal = Input.GetAxis("Horizontal"); // A/D or Left/Right
-        transform.Translate(Vector3.right * horizontal * moveSpeed * Time.deltaTime);
+        float horizontal = Input.GetAxis("Horizontal");
+        transform.Translate(Vector3.right * horizontal * currentMoveSpeed * Time.deltaTime);
     }
 
     private void HandleMouseDrag()

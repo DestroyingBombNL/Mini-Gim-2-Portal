@@ -1,0 +1,106 @@
+using System.Collections;
+using UnityEngine;
+
+public class Archer : Unit
+{
+    [SerializeField] private Rigidbody2D rb2D;
+    [SerializeField] private GameObject laserPrefab;
+    [SerializeField] private float laserSpawnDelay; //0.15f
+    public override void Start()
+    {
+        base.Start();  // Calls Unit.Start()
+        OnAttacking += HandleAttacking;
+        OnMoving += HandleMoving;
+        OnSieging += HandleSieging;
+
+        rb2D.constraints = RigidbodyConstraints2D.FreezePositionY;
+        TriggerMoving();
+    }
+
+    public override void Update()
+    {
+        base.Update();  // Calls Unit.Update()
+    }
+
+    private void HandleAttacking()
+    {
+        Debug.Log(unitType.ToString() + " is attacking...");
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(AttackUnitUntilDestroyed());
+    }
+
+    private IEnumerator AttackUnitUntilDestroyed()
+    {
+        while (targetEnemy != null)
+        {
+            this.animator.Play("Attacking");
+            StartCoroutine(SpawnLaserWithDelay(laserSpawnDelay));
+
+            // Deal damage
+            IUnit unit = targetEnemy.GetComponent<IUnit>();
+
+            if (unit == null)
+            {
+                break;
+            }
+
+            float duration = GetAnimationLength(animator, "Attacking");
+            yield return new WaitForSeconds(duration);
+        }
+
+        // Enemy was destroyed or set to null
+        TriggerMoving();
+    }
+
+    private IEnumerator SpawnLaserWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 spawnPosition = new Vector3(this.transform.position.x, this.transform.position.y + 0.25f, this.transform.position.z);
+        GameObject laserGameObject = Instantiate(laserPrefab, spawnPosition, Quaternion.identity);
+        ILaser laserScript = laserGameObject.GetComponent<ILaser>();
+        laserScript.SetTeam(this.team);
+        laserScript.SetDamage(this.damage);
+    }
+
+    private IEnumerator AttackBaseUntilDestroyed()
+    {
+        Transform portalTransform = team == ETeam.Ally ? enemyPortalTransform : alliedPortalTransform;
+
+        while (portalTransform != null)
+        {
+            this.animator.Play("Attacking");
+            StartCoroutine(SpawnLaserWithDelay(laserSpawnDelay));
+
+            IUnitSystem unitSystem = portalTransform.GetComponent<IUnitSystem>();
+
+            if (unitSystem == null)
+            {
+                break;
+            }
+
+            float duration = GetAnimationLength(animator, "Attacking");
+            yield return new WaitForSeconds(duration);
+        }
+    }
+
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        IUnit otherUnit = other.GetComponent<IUnit>();
+
+        if (otherUnit != null && otherUnit.GetTeam() != this.team && !isSieging)
+        {
+            targetEnemy = other.gameObject;
+            TriggerAttacking();
+        }
+    }
+    
+    private void HandleSieging()
+    {
+        Debug.Log(unitType.ToString() + " is sieging...");
+        if (currentAction != null) StopCoroutine(currentAction);
+        isSieging = true;
+        currentAction = StartCoroutine(AttackBaseUntilDestroyed());
+    }
+}

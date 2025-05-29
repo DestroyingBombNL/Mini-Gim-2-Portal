@@ -1,5 +1,6 @@
 public interface IResourceSystem
 {
+    public event System.Action<int> OnEnergyChanged;
     public int GetEnergy();
     public void SetEnergy(int amount);
     public void AddEnergy(int amount);

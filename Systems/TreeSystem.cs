@@ -17,7 +17,7 @@ public class TreeSystem : MonoBehaviour, ITreeSystem
         {
             
             ITree treeScript = treeGameObject.GetComponent<ITree>();
-            if (treeScript.GetTeam() != team)
+            if (treeScript.GetTeam() != team || treeScript.GetScavengerCurrentCapacity() == treeScript.GetScavengerMaxCapacity())
                 continue;
 
             float distance = Vector3.Distance(treeGameObject.transform.position, portalTransform.position);
