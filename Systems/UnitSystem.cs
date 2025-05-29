@@ -35,6 +35,7 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
     public void SpawnUnit(EUnit unitType)
     {
         GameObject unitGameObject = null;
+
         foreach (var entry in unitPrefabList)
         {
             if (entry.unit == unitType)

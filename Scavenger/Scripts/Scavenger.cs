@@ -6,6 +6,7 @@ public class Scavenger : Unit
 {
     [SerializeField] private Animator animator;
     [SerializeField] private GameObject fruitPrefab;
+    [SerializeField] private float transformsYOffSet;
     private ResourceSystem resourceSystem;
     private TreeSystem treeSystem;
     private Transform targetTreeTransform;
@@ -48,14 +49,14 @@ public class Scavenger : Unit
     {
         Debug.Log("Drone is scavenging...");
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(MoveAndAnimate(targetTreeTransform.position, "Scavenging", TriggerCollecting));
+        currentAction = StartCoroutine(MoveAndAnimate(animator, new Vector3(targetTreeTransform.position.x, targetTreeTransform.position.y + transformsYOffSet, targetTreeTransform.position.z), "Scavenging", TriggerCollecting));
     }
 
     private void HandleCollecting()
     {
         Debug.Log("Drone is collecting...");
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(PlayAnimationThen("Collecting", TriggerReturning));
+        currentAction = StartCoroutine(PlayAnimationThen(animator, "Collecting", TriggerReturning));
 
         PlayFruitAnimation("Float");
 
@@ -67,56 +68,19 @@ public class Scavenger : Unit
     {
         Debug.Log("Drone is returning...");
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(MoveAndAnimate(this.team == ETeam.Ally ? alliedPortalTransform.position : enemyPortalTransform.position, "Returning", TriggerOffLoading));
+        currentAction = StartCoroutine(MoveAndAnimate(animator, this.team == ETeam.Ally ? new Vector3(alliedPortalTransform.position.x, alliedPortalTransform.position.y + transformsYOffSet, alliedPortalTransform.position.z) : new Vector3(enemyPortalTransform.position.x, enemyPortalTransform.position.y + transformsYOffSet, enemyPortalTransform.position.z), "Returning", TriggerOffLoading));
     }
 
     private void HandleOffLoading()
     {
         Debug.Log("Drone is offLoading...");
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(PlayAnimationThen("OffLoading", TriggerScavenging));
+        currentAction = StartCoroutine(PlayAnimationThen(animator, "OffLoading", TriggerScavenging));
 
         PlayFruitAnimation("Drop");
 
         this.resourceSystem.AddEnergy(fruitInventory);
         this.fruitInventory = null;
-    }
-
-    private IEnumerator MoveAndAnimate(Vector3 target, string animName, Action onArrive)
-    {
-        animator.Play(animName);
-
-        while (Vector3.Distance(transform.position, target) > 0.1f)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
-            yield return null;
-        }
-
-        onArrive?.Invoke();
-    }
-
-    private IEnumerator PlayAnimationThen(string animName, Action onComplete)
-    {
-        animator.Play(animName);
-
-        // Find the clip length
-        float duration = GetAnimationLength(animator, animName);
-        yield return new WaitForSeconds(duration);
-
-        onComplete?.Invoke();
-    }
-
-    private float GetAnimationLength(Animator targetAnimator, string animName)
-    {
-        AnimationClip[] clips = targetAnimator.runtimeAnimatorController.animationClips;
-        foreach (var clip in clips)
-        {
-            if (clip.name == animName)
-                return clip.length;
-        }
-
-        Debug.LogWarning($"Animation '{animName}' not found!");
-        return 1f;
     }
 
     private void PlayFruitAnimation(string animName)

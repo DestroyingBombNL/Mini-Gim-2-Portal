@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Unit : MonoBehaviour, IUnit
@@ -27,7 +29,7 @@ public class Unit : MonoBehaviour, IUnit
 
     }
 
-    private void TriggerOnDefeated() => OnDefeated?.Invoke();
+    protected void TriggerOnDefeated() => OnDefeated?.Invoke();
 
     public int GetEnergyCost()
     {
@@ -44,6 +46,11 @@ public class Unit : MonoBehaviour, IUnit
         this.enemyPortalTransform = transform;
     }
 
+    public ETeam GetTeam()
+    {
+        return this.team;        
+    }
+
     public void TakeDamage(int damage)
     {
         health -= damage;
@@ -54,8 +61,46 @@ public class Unit : MonoBehaviour, IUnit
         }
     }
 
-    private void HandleOnDefeated()
+    protected void HandleOnDefeated()
     {
-        Debug.Log("Rip...");
+        Debug.Log("Unit got Defeated...");
+        Destroy(this.gameObject);
+    }
+
+    protected IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive)
+    {
+        animator.Play(animName);
+
+        while (Vector3.Distance(transform.position, target) > 0.1f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+            yield return null;
+        }
+
+        onArrive?.Invoke();
+    }
+
+    protected IEnumerator PlayAnimationThen(Animator animator, string animName, Action onComplete)
+    {
+        animator.Play(animName);
+
+        // Find the clip length
+        float duration = GetAnimationLength(animator, animName);
+        yield return new WaitForSeconds(duration);
+
+        onComplete?.Invoke();
+    }
+
+    protected float GetAnimationLength(Animator targetAnimator, string animName)
+    {
+        AnimationClip[] clips = targetAnimator.runtimeAnimatorController.animationClips;
+        foreach (var clip in clips)
+        {
+            if (clip.name == animName)
+                return clip.length;
+        }
+
+        Debug.LogWarning($"Animation '{animName}' not found!");
+        return 1f;
     }
 }
