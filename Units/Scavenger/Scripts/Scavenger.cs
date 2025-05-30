@@ -6,7 +6,7 @@ public class Scavenger : Unit
 {
     [SerializeField] private GameObject fruitPrefab;
     [SerializeField] private float transformsYOffSet;
-    private ResourceSystem resourceSystem;
+    private EnergySystem energySystem;
     private TreeSystem treeSystem;
     private Transform targetTreeTransform;
     private ITree targetTreeScript;
@@ -19,7 +19,7 @@ public class Scavenger : Unit
     public override void Start()
     {
         base.Start();  // Calls Unit.Start()
-        this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+        this.energySystem = ServiceLocator.Get<EnergySystem>();
         this.treeSystem = ServiceLocator.Get<TreeSystem>();
         GameObject nearestTree = this.treeSystem.GetNearestTree(team);
         this.targetTreeTransform = nearestTree.transform;
@@ -135,7 +135,7 @@ public class Scavenger : Unit
     {
         yield return new WaitForSeconds(delay);
 
-        this.resourceSystem.AddEnergy(fruitInventory);
+        this.energySystem.AddEnergy(team, fruitInventory);
         this.fruitInventory = null;
     }
 }

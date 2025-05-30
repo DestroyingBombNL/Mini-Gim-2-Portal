@@ -76,7 +76,7 @@ public class Unit : MonoBehaviour, IUnit
 
     protected virtual void HandleOnMoving()
     {
-        Debug.Log(unitType.ToString() + " is moving...");
+        //Debug.Log(unitType.ToString() + " is moving...");
         if (currentAction != null) StopCoroutine(currentAction);
 
         bool isSieging = this.actionSystem.GetIsSieging();

@@ -9,14 +9,15 @@ public class UnitPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameField;
     [SerializeField] private TextMeshProUGUI priceField;
     [SerializeField] private EUnit unitType;
+    private ETeam team = ETeam.Ally;
     private UnitSystem unitSystem;
-    private ResourceSystem resourceSystem;
+    private EnergySystem energySystem;
     private int unitEnergyCost;
 
     void Start()
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
-        this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+        this.energySystem = ServiceLocator.Get<EnergySystem>();
 
         GameObject unit = this.unitSystem.getUnitGameObject(unitType);
 
@@ -33,11 +34,16 @@ public class UnitPanel : MonoBehaviour
             this.unitSystem.SpawnUnit(unitType);
         });
 
-        resourceSystem.OnEnergyChanged += UpdateUI;
+        energySystem.OnEnergyChanged += UpdateUI;
     }
 
-    private void UpdateUI(int newEnergy)
+    private void UpdateUI(ETeam team, int newEnergy)
     {
+        if (this.team != team)
+        {
+            return;
+        }
+        
         this.button.interactable = newEnergy >= this.unitEnergyCost ? true : false;
         Color color = this.imageRenderer.color;
         color.a = newEnergy >= this.unitEnergyCost ? 1f : 0.5f;

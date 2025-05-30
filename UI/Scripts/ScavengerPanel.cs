@@ -8,16 +8,17 @@ public class ScavengerPanel : MonoBehaviour
     [SerializeField] private Image imageRenderer;
     [SerializeField] private TextMeshProUGUI nameField;
     [SerializeField] private TextMeshProUGUI priceField;
+    private ETeam team = ETeam.Ally;
     private EUnit unitType = EUnit.Scavenger;
     private UnitSystem unitSystem;
-    private ResourceSystem resourceSystem;
+    private EnergySystem energySystem;
     private TreeSystem treeSystem;
     private int unitEnergyCost;
 
     void Start()
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
-        this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+        this.energySystem = ServiceLocator.Get<EnergySystem>();
         this.treeSystem = ServiceLocator.Get<TreeSystem>();
 
         GameObject unit = this.unitSystem.getUnitGameObject(unitType);
@@ -35,14 +36,18 @@ public class ScavengerPanel : MonoBehaviour
             this.unitSystem.SpawnUnit(unitType);
         });
 
-        this.resourceSystem.OnEnergyChanged += UpdateUI;
-        this.treeSystem.OnAlliedScavengerSpotsAvailableChanged += UpdateUI;
+        this.energySystem.OnEnergyChanged += UpdateUIEnergyChanged;
+        this.treeSystem.OnScavengerSpotsAvailableChanged += UpdateUIScavengerSpotsAvailableChanged;
     }
 
-    private void UpdateUI(int newEnergy)
+    private void UpdateUIEnergyChanged(ETeam team, int newEnergy)
     {
+        if (this.team != team) {
+            return;
+        }
+
         bool energyRequirementReached = newEnergy >= this.unitEnergyCost;
-        bool scavengerSlotsAvailable = this.treeSystem.GetAlliedScavengerSpotsAvailable() > 0;
+        bool scavengerSlotsAvailable = this.treeSystem.GetScavengerSpotsAvailable(team) > 0;
         bool allRequirementsMet = energyRequirementReached && scavengerSlotsAvailable;
 
         this.button.interactable = allRequirementsMet ? true : false;
@@ -51,10 +56,14 @@ public class ScavengerPanel : MonoBehaviour
         this.imageRenderer.color = color;
     }
     
-    private void UpdateUI()
+    private void UpdateUIScavengerSpotsAvailableChanged(ETeam team, int spotsAvailable)
     {
-        bool energyRequirementReached = this.resourceSystem.GetEnergy() >= this.unitEnergyCost;
-        bool scavengerSlotsAvailable = this.treeSystem.GetAlliedScavengerSpotsAvailable() > 0;
+        if (this.team != team) {
+            return;
+        }
+
+        bool energyRequirementReached = this.energySystem.GetEnergy(team) >= this.unitEnergyCost;
+        bool scavengerSlotsAvailable = spotsAvailable > 0;
         bool allRequirementsMet = energyRequirementReached && scavengerSlotsAvailable;
 
         this.button.interactable = allRequirementsMet ? true : false;

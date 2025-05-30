@@ -1,63 +1,94 @@
 using UnityEngine;
+using System;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class TeamTreeEntry
+{
+    public ETeam team;
+    public GameObject[] trees;
+}
+
+[System.Serializable]
+public class TeamPortalEntry
+{
+    public ETeam team;
+    public Transform portal;
+}
+
 
 public class TreeSystem : MonoBehaviour, ITreeSystem
 {
-    public event System.Action OnAlliedScavengerSpotsAvailableChanged;
-    [SerializeField] private int alliedScavengerSpotsAvailable;
-    [SerializeField] private GameObject[] treeGameObjects;
-    [SerializeField] private Transform alliedPortalTransform;
-    [SerializeField] private Transform enemyPortalTransform;
+    public event Action<ETeam, int> OnScavengerSpotsAvailableChanged;
+    [SerializeField] private TeamTreeEntry[] teamTrees;
+    [SerializeField] private TeamPortalEntry[] teamPortals;
+    private Dictionary<ETeam, GameObject[]> teamTreeMap = new();
+    private Dictionary<ETeam, Transform> teamPortalMap = new();
+    private Dictionary<ETeam, int> scavengerSpotsAvailable = new();
+
+    void Awake()
+    {
+        foreach (var entry in teamTrees)
+            teamTreeMap[entry.team] = entry.trees;
+
+        foreach (var entry in teamPortals)
+            teamPortalMap[entry.team] = entry.portal;
+    }
 
     void Start()
     {
-        foreach (GameObject treeGameObject in treeGameObjects)
+        // Initialize scavenger spot counts
+        foreach (var team in teamTreeMap.Keys)
         {
-            ITree treeScript = treeGameObject.GetComponent<ITree>();
-            if (treeScript.GetTeam() == ETeam.Ally)
+            scavengerSpotsAvailable[team] = 0;
+
+            foreach (GameObject tree in teamTreeMap[team])
             {
-                alliedScavengerSpotsAvailable += treeScript.GetScavengerMaxCapacity() - treeScript.GetScavengerCurrentCapacity();
+                ITree treeScript = tree.GetComponent<ITree>();
+                scavengerSpotsAvailable[team] += treeScript.GetScavengerMaxCapacity() - treeScript.GetScavengerCurrentCapacity();
             }
+
+            OnScavengerSpotsAvailableChanged?.Invoke(team, scavengerSpotsAvailable[team]);
         }
     }
 
     public GameObject GetNearestTree(ETeam team)
     {
-        Transform portalTransform = team == ETeam.Ally ? alliedPortalTransform : enemyPortalTransform;
-
         float closestDistance = float.MaxValue;
-        GameObject closestTreeGameObject = null;
+        GameObject closestTree = null;
+        Transform portal = teamPortalMap[team];
 
-        foreach (GameObject treeGameObject in treeGameObjects)
+        foreach (GameObject tree in teamTreeMap[team])
         {
-
-            ITree treeScript = treeGameObject.GetComponent<ITree>();
-            if (treeScript.GetTeam() != team || treeScript.GetScavengerCurrentCapacity() == treeScript.GetScavengerMaxCapacity())
+            ITree treeScript = tree.GetComponent<ITree>();
+            if (treeScript.GetScavengerCurrentCapacity() >= treeScript.GetScavengerMaxCapacity())
                 continue;
 
-            float distance = Vector3.Distance(treeGameObject.transform.position, portalTransform.position);
+            float distance = Vector3.Distance(tree.transform.position, portal.position);
             if (distance < closestDistance)
             {
                 closestDistance = distance;
-                closestTreeGameObject = treeGameObject;
+                closestTree = tree;
             }
         }
 
-        return closestTreeGameObject;
+        return closestTree;
     }
 
-    public void IncreaseAlliedScavengerSpotsAvailable(int amount)
+    public void IncreaseScavengerSpotsAvailable(ETeam team, int amount)
     {
-        this.alliedScavengerSpotsAvailable += amount;
-        OnAlliedScavengerSpotsAvailableChanged?.Invoke();
-    }
-    public void ReduceAlliedScavengerSpotsAvailable(int amount)
-    {
-        this.alliedScavengerSpotsAvailable -= amount;
-        OnAlliedScavengerSpotsAvailableChanged?.Invoke();
+        scavengerSpotsAvailable[team] += amount;
+        OnScavengerSpotsAvailableChanged?.Invoke(team, scavengerSpotsAvailable[team]);
     }
 
-    public int GetAlliedScavengerSpotsAvailable()
+    public void ReduceScavengerSpotsAvailable(ETeam team, int amount)
     {
-        return this.alliedScavengerSpotsAvailable;
+        scavengerSpotsAvailable[team] -= amount;
+        OnScavengerSpotsAvailableChanged?.Invoke(team, scavengerSpotsAvailable[team]);
+    }
+
+    public int GetScavengerSpotsAvailable(ETeam team)
+    {
+        return scavengerSpotsAvailable[team];
     }
 }

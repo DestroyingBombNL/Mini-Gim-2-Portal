@@ -9,28 +9,57 @@ public class UnitPrefabEntry
     public GameObject prefab;
 }
 
+[System.Serializable]
+public class TeamPassiveEnergyGainEntry
+{
+    public ETeam team;
+    public int passiveEnergyGain;
+}
+
+[System.Serializable]
+public class TeamPassiveEnergyGainEntry
+{
+    public ETeam team;
+    public int passiveEnergyGain;
+}
+
+[System.Serializable]
+public class TeamPassiveEnergyGainEntry
+{
+    public ETeam team;
+    public int passiveEnergyGain;
+}
+
+[System.Serializable]
+public class TeamPassiveEnergyGainEntry
+{
+    public ETeam team;
+    public int passiveEnergyGain;
+}
+
+
 public class UnitSystem : MonoBehaviour, IUnitSystem
 {
-    [SerializeField] private ETeam team;
-    [SerializeField] private int health;
     [SerializeField] private List<UnitPrefabEntry> unitPrefabList;
-    [SerializeField] private float spawnYOffsetMin; //0.25f
-    [SerializeField] private float spawnYOffsetMax; //0.5f
-    [SerializeField] private Transform spawnerTransform;
-    [SerializeField] private Transform defendTransform;
-    [SerializeField] private Transform siegeTransform;
-    [SerializeField] private Transform unitContainerTransform; //Where units in Editor spawn
+    [SerializeField] private TeamHealthEntry[] TeamHealthEntries;
+    [SerializeField] private TeamSpawnerTransformEntry[] TeamSpawnerTransformEntries;
+    [SerializeField] private TeamDefendTransformEntry[] TeamDefendTransformEntries;
+    [SerializeField] private TeamSiegeTransformEntry[] TeamSiegeTransformEntries;
+    [SerializeField] private TeamUnitContainerTransformEntry[] TeamUnitContainerTransformEntries;
 
-    private IResourceSystem resourceSystem;
+    private IEnergySystem energySystem;
+
+    void Awake()
+    {
+        foreach (var entry in teamEnergies)
+        {
+            teamEnergyMap[entry.team] = entry.energy;
+        }
+    }
 
     void Start()
     {
-        this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
-    }
-
-    void Update()
-    {
-        
+        this.energySystem = ServiceLocator.Get<EnergySystem>();
     }
 
     public void TakeDamage(int damage)
@@ -51,9 +80,9 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
     {
         GameObject unitGameObject = getUnitGameObject(unitType);
 
-        if (this.resourceSystem == null)
+        if (this.energySystem == null)
         {
-            this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+            this.energySystem = ServiceLocator.Get<EnergySystem>();
         }
 
         if (unitGameObject == null)
@@ -63,7 +92,7 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         }
 
         IUnit unitScript = unitGameObject.GetComponent<IUnit>();
-        if (this.resourceSystem.RemoveEnergy(unitScript))
+        if (this.energySystem.RemoveEnergy(team, unitScript))
         {
             Vector3 spawnPosition = this.transform.position;
             spawnPosition.y += UnityEngine.Random.Range(spawnYOffsetMin, spawnYOffsetMax);

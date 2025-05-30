@@ -32,7 +32,7 @@ public class Tree : MonoBehaviour, ITree
         int scavengerCapacity = GetScavengerCurrentCapacity();
         int index = scavengerCapacity;
         this.scavengers[index] = scavenger;
-        this.treeSystem.ReduceAlliedScavengerSpotsAvailable(1);
+        this.treeSystem.ReduceScavengerSpotsAvailable(team, 1);
     }
 
     public void RemoveScavenger(Scavenger scavenger)
@@ -42,7 +42,7 @@ public class Tree : MonoBehaviour, ITree
             if (this.scavengers[i] == scavenger)
             {
                 this.scavengers[i] = null;
-                this.treeSystem.IncreaseAlliedScavengerSpotsAvailable(1);
+                this.treeSystem.ReduceScavengerSpotsAvailable(team, 1);
                 break;
             }
         }
