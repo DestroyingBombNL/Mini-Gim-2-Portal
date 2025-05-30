@@ -5,6 +5,7 @@ public class ServiceBootstrapper : MonoBehaviour
     [SerializeField] private TreeSystem treeSystem;
     [SerializeField] private UnitSystem unitSystem;
     [SerializeField] private ResourceSystem resourceSystem;
+    [SerializeField] private ActionSystem actionSystem;
 
     void Awake()
     {
@@ -26,5 +27,10 @@ public class ServiceBootstrapper : MonoBehaviour
         }
         ServiceLocator.Register(unitSystem);
 
+        if (actionSystem == null)
+        {
+            actionSystem = FindFirstObjectByType<ActionSystem>();
+        }
+        ServiceLocator.Register(actionSystem);
     }
 }

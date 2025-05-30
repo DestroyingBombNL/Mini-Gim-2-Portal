@@ -3,18 +3,22 @@ using UnityEngine;
 
 public class Archer : Unit
 {
-    [SerializeField] private Rigidbody2D rb2D;
     [SerializeField] private GameObject laserPrefab;
     [SerializeField] private float laserSpawnDelay; //0.15f
+    protected GameObject targetEnemy;
     public override void Start()
     {
         base.Start();  // Calls Unit.Start()
-        OnAttacking += HandleAttacking;
-        OnMoving += HandleMoving;
-        OnSieging += HandleSieging;
+
+        OnMoving += HandleOnMoving;
+        this.actionSystem.OnIsSiegingChanged += TriggerOnMoving;
+        
+        OnAttacking += HandleOnAttacking;
+        OnDefending += HandleOnDefending;
+        OnSieging += HandleOnSieging;
 
         rb2D.constraints = RigidbodyConstraints2D.FreezePositionY;
-        TriggerMoving();
+        TriggerOnMoving();
     }
 
     public override void Update()
@@ -22,11 +26,32 @@ public class Archer : Unit
         base.Update();  // Calls Unit.Update()
     }
 
-    private void HandleAttacking()
+    private void HandleOnAttacking()
     {
-        Debug.Log(unitType.ToString() + " is attacking...");
+       // Debug.Log(unitType.ToString() + " is attacking...");
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(AttackUnitUntilDestroyed());
+    }
+
+    private void HandleOnDefending()
+    {
+        //Debug.Log(unitType.ToString() + " is defending...");
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(Idle());
+    }
+
+    private void HandleOnSieging()
+    {
+        //Debug.Log(unitType.ToString() + " is sieging...");
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(AttackBaseUntilDestroyed());
+    }
+
+    private IEnumerator Idle()
+    {
+        this.animator.Play("Idle");
+        //float duration = GetAnimationLength(animator, "Idle");
+        yield return new WaitForSeconds(60f);
     }
 
     private IEnumerator AttackUnitUntilDestroyed()
@@ -49,7 +74,7 @@ public class Archer : Unit
         }
 
         // Enemy was destroyed or set to null
-        TriggerMoving();
+        TriggerOnMoving();
     }
 
     private IEnumerator SpawnLaserWithDelay(float delay)
@@ -65,42 +90,24 @@ public class Archer : Unit
 
     private IEnumerator AttackBaseUntilDestroyed()
     {
-        Transform portalTransform = team == ETeam.Ally ? enemyPortalTransform : alliedPortalTransform;
-
-        while (portalTransform != null)
+        while (this.siegeTransform != null)
         {
             this.animator.Play("Attacking");
             StartCoroutine(SpawnLaserWithDelay(laserSpawnDelay));
-
-            IUnitSystem unitSystem = portalTransform.GetComponent<IUnitSystem>();
-
-            if (unitSystem == null)
-            {
-                break;
-            }
 
             float duration = GetAnimationLength(animator, "Attacking");
             yield return new WaitForSeconds(duration);
         }
     }
 
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         IUnit otherUnit = other.GetComponent<IUnit>();
 
-        if (otherUnit != null && otherUnit.GetTeam() != this.team && !isSieging)
+        if (otherUnit != null && otherUnit.GetTeam() != this.team)
         {
             targetEnemy = other.gameObject;
-            TriggerAttacking();
+            TriggerOnAttacking();
         }
-    }
-    
-    private void HandleSieging()
-    {
-        Debug.Log(unitType.ToString() + " is sieging...");
-        if (currentAction != null) StopCoroutine(currentAction);
-        isSieging = true;
-        currentAction = StartCoroutine(AttackBaseUntilDestroyed());
     }
 }

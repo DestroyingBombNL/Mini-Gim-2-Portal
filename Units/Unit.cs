@@ -4,9 +4,7 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour, IUnit
 {
-    protected UnitSystem unitSystem;
-    protected Transform alliedPortalTransform;
-    protected Transform enemyPortalTransform;
+    //Unity Editor Configurations
     [SerializeField] protected ETeam team;
     [SerializeField] protected EUnit unitType;
     [SerializeField] protected int health;
@@ -16,32 +14,35 @@ public class Unit : MonoBehaviour, IUnit
     [SerializeField] protected int energyCost;
     [SerializeField] protected Animator animator;
     [SerializeField] protected CircleCollider2D circleCollider2D;
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private int sortingOffset; //1000
-    protected Coroutine currentAction;
+    [SerializeField] protected Rigidbody2D rb2D;
+    [SerializeField] protected SpriteRenderer spriteRenderer;
+    [SerializeField] protected int sortingOffset; //1000
+
+    //Set by parent spawner
+    protected Transform spawnerTransform;
+    protected Transform defendTransform;
+    protected Transform siegeTransform;
+
+    //Services
+    protected UnitSystem unitSystem;
+    protected ActionSystem actionSystem;
+
+    //Actions
     protected Action OnDefeated;
-    protected Action OnAttacking;
     protected Action OnMoving;
+    protected Action OnAttacking;
+    protected Action OnDefending;
     protected Action OnSieging;
-    protected GameObject targetEnemy;
-    protected bool isSieging = false;
+    protected Coroutine currentAction;
 
     public virtual void Start()
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
+        this.actionSystem = ServiceLocator.Get<ActionSystem>();
         OnDefeated += HandleOnDefeated;
+
         SetRange();
         SetSortingOrder();
-    }
-
-    protected void SetSortingOrder()
-    {
-        this.spriteRenderer.sortingOrder = Mathf.RoundToInt(sortingOffset - transform.position.y * 100);
-    }
-
-    protected void SetRange()
-    {
-        circleCollider2D.radius = range;
     }
 
     public virtual void Update()
@@ -49,53 +50,77 @@ public class Unit : MonoBehaviour, IUnit
 
     }
 
+    protected void SetRange()
+    {
+        circleCollider2D.radius = range;
+    }
+
+    protected void SetSortingOrder()
+    {
+        this.spriteRenderer.sortingOrder = Mathf.RoundToInt(sortingOffset - transform.position.y * 100);
+    }
+
     protected void TriggerOnDefeated() => OnDefeated?.Invoke();
+    protected void TriggerOnMoving() => OnMoving?.Invoke();
+    protected void TriggerOnAttacking() => OnAttacking?.Invoke();
+    protected void TriggerOnDefending() => OnDefending?.Invoke();
+    protected void TriggerOnSieging() => OnSieging?.Invoke();
 
-    public int GetEnergyCost()
+    protected virtual void HandleOnDefeated()
     {
-        return this.energyCost;
-    }
+        Debug.Log("Unit got defeated...");
+        if (currentAction != null) StopCoroutine(currentAction);
 
-    public void SetAlliedPortalTransform(Transform transform)
-    {
-        this.alliedPortalTransform = transform;
-    }
-
-    public void SetEnemyPortalTransform(Transform transform)
-    {
-        this.enemyPortalTransform = transform;
-    }
-
-    public ETeam GetTeam()
-    {
-        return this.team;
-    }
-
-    public virtual void TakeDamage(int damage)
-    {
-        health -= damage;
-        if (health <= 0)
-        {
-            if (currentAction != null) StopCoroutine(currentAction);
-            TriggerOnDefeated();
-        }
-    }
-
-    protected void HandleOnDefeated()
-    {
-        Debug.Log("Unit got Defeated...");
         Destroy(this.gameObject);
     }
 
-    protected IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
+    protected virtual void HandleOnMoving()
     {
+        Debug.Log(unitType.ToString() + " is moving...");
+        if (currentAction != null) StopCoroutine(currentAction);
+
+        bool isSieging = this.actionSystem.GetIsSieging();
+        Action onArrive = isSieging ? TriggerOnSieging : TriggerOnDefending;
+        Transform location = isSieging ? siegeTransform : defendTransform;
+
+        currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
+    }
+
+    protected virtual IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
+    {
+        // Cache original Y so we never modify it
+        float originalY = rb2D.position.y;
+
+        Vector3 scale = transform.localScale;
+
+        // Flip sprite based on direction
+        bool isToRight = transform.position.x > target.x;
+        scale.x = isToRight ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+        transform.localScale = scale;
+
+        // Adjust target based on direction and deviation
+        if (isToRight)
+            target.x -= deviation * 2f;
+
+        if (!this.actionSystem.GetIsSieging())
+        {
+            float randomOffset = UnityEngine.Random.Range(-1.5f, 1.5f);
+            target.x += randomOffset;
+        }
+
         animator.Play(animName);
 
-        while (Vector3.Distance(transform.position, target) > deviation)
+        // Move via Rigidbody2D so constraints are honored
+        while (Mathf.Abs(rb2D.position.x - target.x) > deviation)
         {
-            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+            float newX = Mathf.MoveTowards(rb2D.position.x, target.x, speed * Time.deltaTime);
+            rb2D.MovePosition(new Vector2(newX, originalY));
             yield return null;
         }
+
+        // Unflip sprite
+        scale.x = Mathf.Abs(scale.x);
+        transform.localScale = scale;
 
         onArrive?.Invoke();
     }
@@ -124,14 +149,37 @@ public class Unit : MonoBehaviour, IUnit
         return 1f;
     }
 
-    protected void TriggerAttacking() => OnAttacking?.Invoke();
-    protected void TriggerMoving() => OnMoving?.Invoke();
-    protected void TriggerSieging() => OnSieging?.Invoke();
-
-    protected virtual void HandleMoving()
+    public int GetEnergyCost()
     {
-        Debug.Log(unitType.ToString() + " is moving...");
-        if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(MoveAndAnimate(this.animator, this.team == ETeam.Ally ? enemyPortalTransform.position : alliedPortalTransform.position, "Moving", TriggerSieging, 0.9f + range));
+        return this.energyCost;
+    }
+
+    public void SetSiegeTransform(Transform transform)
+    {
+        this.siegeTransform = transform;
+    }
+    public void SetDefendTransform(Transform transform)
+    {
+        this.defendTransform = transform;
+    }
+
+    public void SetSpawnerTransform(Transform transform)
+    {
+        this.spawnerTransform = transform;
+    }
+
+    public ETeam GetTeam()
+    {
+        return this.team;
+    }
+
+    public virtual void TakeDamage(int damage)
+    {
+        health -= damage;
+        if (health <= 0)
+        {
+            if (currentAction != null) StopCoroutine(currentAction);
+            TriggerOnDefeated();
+        }
     }
 }

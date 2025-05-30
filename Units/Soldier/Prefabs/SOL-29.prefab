@@ -107,14 +107,14 @@ MonoBehaviour:
   unitType: 3
   health: 25
   damage: 5
-  speed: 2.4
-  range: 0.6
+  speed: 9
+  range: 1
   energyCost: 100
   animator: {fileID: -1049750716983900897}
   circleCollider2D: {fileID: 7108103593744340714}
+  rb2D: {fileID: 6688298556057703704}
   spriteRenderer: {fileID: 113381619179743781}
   sortingOffset: 1000
-  rb2D: {fileID: 6688298556057703704}
   hitEffectPrefab: {fileID: 8506764020906976254, guid: 863d86b71c214044f9089ea19c062fdb, type: 3}
   effectDelay: 0.65
 --- !u!58 &7108103593744340714
@@ -183,7 +183,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7819389470668891585}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -201,4 +201,4 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 2

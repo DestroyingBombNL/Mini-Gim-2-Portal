@@ -17,6 +17,7 @@ public class UnitPanel : MonoBehaviour
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
         this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+
         GameObject unit = this.unitSystem.getUnitGameObject(unitType);
 
         string unitName = unit.name; //Name of the prefab
@@ -37,7 +38,7 @@ public class UnitPanel : MonoBehaviour
 
     private void UpdateUI(int newEnergy)
     {
-        this.button.enabled = newEnergy >= this.unitEnergyCost ? true : false;
+        this.button.interactable = newEnergy >= this.unitEnergyCost ? true : false;
         Color color = this.imageRenderer.color;
         color.a = newEnergy >= this.unitEnergyCost ? 1f : 0.5f;
         this.imageRenderer.color = color;

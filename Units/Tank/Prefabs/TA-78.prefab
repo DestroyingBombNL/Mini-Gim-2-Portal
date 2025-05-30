@@ -107,14 +107,14 @@ MonoBehaviour:
   unitType: 2
   health: 50
   damage: 0
-  speed: 1.4
+  speed: 7
   range: 0.9
   energyCost: 500
   animator: {fileID: 4385549003001827651}
   circleCollider2D: {fileID: 3041183670785451031}
+  rb2D: {fileID: 3305799078314394888}
   spriteRenderer: {fileID: 2549987342071976094}
   sortingOffset: 1000
-  rb2D: {fileID: 3305799078314394888}
 --- !u!58 &3041183670785451031
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -199,4 +199,4 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 2

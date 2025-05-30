@@ -13,17 +13,24 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
 {
     [SerializeField] private ETeam team;
     [SerializeField] private int health;
-    [SerializeField] private Transform alliedPortalTransform;
-    [SerializeField] private Transform enemyPortalTransform;
     [SerializeField] private List<UnitPrefabEntry> unitPrefabList;
     [SerializeField] private float spawnYOffsetMin; //0.25f
     [SerializeField] private float spawnYOffsetMax; //0.5f
-    [SerializeField] private Transform unitTransform; //Where units in Editor spawn
+    [SerializeField] private Transform spawnerTransform;
+    [SerializeField] private Transform defendTransform;
+    [SerializeField] private Transform siegeTransform;
+    [SerializeField] private Transform unitContainerTransform; //Where units in Editor spawn
+
     private IResourceSystem resourceSystem;
 
     void Start()
     {
         this.resourceSystem = ServiceLocator.Get<ResourceSystem>();
+    }
+
+    void Update()
+    {
+        
     }
 
     public void TakeDamage(int damage)
@@ -60,10 +67,11 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         {
             Vector3 spawnPosition = this.transform.position;
             spawnPosition.y += UnityEngine.Random.Range(spawnYOffsetMin, spawnYOffsetMax);
-            GameObject instantiatedUnit = Instantiate(unitGameObject, spawnPosition, Quaternion.identity, unitTransform);
+            GameObject instantiatedUnit = Instantiate(unitGameObject, spawnPosition, Quaternion.identity, unitContainerTransform);
             IUnit instantiatedUnitScript = instantiatedUnit.GetComponent<IUnit>();
-            instantiatedUnitScript.SetAlliedPortalTransform(alliedPortalTransform);
-            instantiatedUnitScript.SetEnemyPortalTransform(enemyPortalTransform);
+            instantiatedUnitScript.SetSpawnerTransform(spawnerTransform);
+            instantiatedUnitScript.SetDefendTransform(defendTransform);
+            instantiatedUnitScript.SetSiegeTransform(siegeTransform);
         }
     }
 

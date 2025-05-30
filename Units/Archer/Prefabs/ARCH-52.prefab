@@ -107,14 +107,14 @@ MonoBehaviour:
   unitType: 1
   health: 10
   damage: 10
-  speed: 2
+  speed: 8
   range: 4
   energyCost: 200
   animator: {fileID: 6182586785534615819}
   circleCollider2D: {fileID: 3050920059035000365}
+  rb2D: {fileID: 3082924722986469553}
   spriteRenderer: {fileID: 6181322884907687114}
   sortingOffset: 1000
-  rb2D: {fileID: 3082924722986469553}
   laserPrefab: {fileID: 4395557588138313851, guid: 1723cec82f93b6a4dacac40927161719, type: 3}
   laserSpawnDelay: 0.15
 --- !u!58 &3050920059035000365
@@ -201,4 +201,4 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 2
