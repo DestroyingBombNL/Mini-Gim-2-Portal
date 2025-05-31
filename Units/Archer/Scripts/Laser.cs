@@ -8,12 +8,13 @@ public class Laser : MonoBehaviour, ILaser
     [SerializeField] private GameObject hitEffectPrefab;
     private ETeam team;
     private int damage;
+    private UnitSystem unitSystem;
 
     void Start()
     {
         // Move right for Ally, left for Enemy
         rb.linearVelocity = (team == ETeam.Ally ? Vector2.right : Vector2.left) * speed;
-
+        this.unitSystem = ServiceLocator.Get<UnitSystem>();
         Destroy(gameObject, timeToDespawn);
     }
 
@@ -40,10 +41,9 @@ public class Laser : MonoBehaviour, ILaser
         }
 
         // Portal
-        IUnitSystem unitSystem = other.GetComponent<IUnitSystem>();
-        if (unitSystem != null && unitSystem.GetTeam() != this.team)
+        if (other.transform == unitSystem.getSiegeTransform(team))
         {
-            unitSystem.TakeDamage(damage);
+            unitSystem.TakeDamage(team, damage);
             if (hitEffectPrefab != null)
             {
                 Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);

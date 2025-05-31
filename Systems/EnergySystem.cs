@@ -7,51 +7,25 @@ public class TeamEnergyEntry
 {
     public ETeam team;
     public int energy;
-}
-
-[System.Serializable]
-public class TeamTextEntry
-{
-    public ETeam team;
-    public TextMeshProUGUI text;
-}
-
-[System.Serializable]
-public class TeamPassiveEnergyGainEntry
-{
-    public ETeam team;
     public int passiveEnergyGain;
+    public TextMeshProUGUI text;
+    
 }
 
 public class EnergySystem : MonoBehaviour, IEnergySystem
 {
     public event System.Action<ETeam, int> OnEnergyChanged;
     [SerializeField] private TeamEnergyEntry[] teamEnergyEntries;
-    [SerializeField] private TeamPassiveEnergyGainEntry[] teamPassiveEnergyGainEntries;
-    [SerializeField] private TeamTextEntry[] teamTexts;
     [SerializeField] private float passiveEnergyTimer; // = 0f;
     [SerializeField] private float passiveEnergyInterval; // = 5f;
-
-    private Dictionary<ETeam, int> teamEnergyMap = new();
-    private Dictionary<ETeam, TextMeshProUGUI> teamTextMap = new();
-    private Dictionary<ETeam, int> teamPassiveEnergyGainMap = new();
+    private Dictionary<ETeam, TeamEnergyEntry> teamEnergyMap = new();
     
 
     void Awake()
     {
         foreach (var entry in teamEnergyEntries)
         {
-            teamEnergyMap[entry.team] = entry.energy;
-        }
-
-        foreach (var entry in teamTexts)
-        {
-            teamTextMap[entry.team] = entry.text;
-        }
-
-        foreach (var entry in teamPassiveEnergyGainEntries)
-        {
-            teamPassiveEnergyGainMap[entry.team] = entry.passiveEnergyGain;
+            teamEnergyMap[entry.team] = entry;
         }
     }
 
@@ -66,9 +40,9 @@ public class EnergySystem : MonoBehaviour, IEnergySystem
 
         if (passiveEnergyTimer >= passiveEnergyInterval)
         {
-            foreach (var entry in teamPassiveEnergyGainMap)
+            foreach (var entry in teamEnergyMap)
             {
-                AddEnergy(entry.Key, entry.Value);
+                AddEnergy(entry.Key, entry.Value.passiveEnergyGain);
             }
 
             passiveEnergyTimer = 0f;
@@ -77,39 +51,39 @@ public class EnergySystem : MonoBehaviour, IEnergySystem
 
     public int GetEnergy(ETeam team)
     {
-        return this.teamEnergyMap[team];
+        return this.teamEnergyMap[team].energy;
     }
 
     public void SetEnergy(ETeam team, int amount)
     {
-        this.teamEnergyMap[team] = amount;
+        this.teamEnergyMap[team].energy = amount;
         SetNewEnergyText();
-        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team]);
+        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team].energy);
     }
 
     public void AddEnergy(ETeam team, int amount)
     {
-        this.teamEnergyMap[team] += amount;
+        this.teamEnergyMap[team].energy += amount;
         SetNewEnergyText();
-        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team]);
+        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team].energy);
     }
 
     public void AddEnergy(ETeam team, IFruit fruit)
     {
         int amount = fruit.GetEnergyAmount();
-        this.teamEnergyMap[team] += amount;
+        this.teamEnergyMap[team].energy += amount;
         SetNewEnergyText();
-        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team]);
+        OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team].energy);
     }
 
     public bool RemoveEnergy(ETeam team, IUnit unit)
     {
         int unitEnergyCost = unit.GetEnergyCost();
-        if (this.teamEnergyMap[team] >= unitEnergyCost)
+        if (this.teamEnergyMap[team].energy >= unitEnergyCost)
         {
-            this.teamEnergyMap[team] -= unitEnergyCost;
+            this.teamEnergyMap[team].energy -= unitEnergyCost;
             SetNewEnergyText();
-            OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team]);
+            OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team].energy);
             return true;
         }
         return false;
@@ -117,11 +91,11 @@ public class EnergySystem : MonoBehaviour, IEnergySystem
 
     public bool RemoveEnergy(ETeam team, int amount)
     {
-        if (this.teamEnergyMap[team] >= amount)
+        if (this.teamEnergyMap[team].energy >= amount)
         {
-            this.teamEnergyMap[team] -= amount;
+            this.teamEnergyMap[team].energy -= amount;
             SetNewEnergyText();
-            OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team]);
+            OnEnergyChanged?.Invoke(team, this.teamEnergyMap[team].energy);
             return true;
         }
         return false;
@@ -129,9 +103,12 @@ public class EnergySystem : MonoBehaviour, IEnergySystem
 
     private void SetNewEnergyText()
     {
-        foreach (var entry in teamTextMap)
+        foreach (var entry in teamEnergyMap)
         {
-            entry.Value.text = teamEnergyMap[entry.Key].ToString();
+            if (entry.Value.text)
+            {
+                entry.Value.text.text = entry.Value.energy.ToString();
+            }
         }
     }
 }

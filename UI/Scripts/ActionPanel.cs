@@ -4,10 +4,11 @@ using UnityEngine.UI;
 
 public class ActionPanel : MonoBehaviour
 {
+    [SerializeField] ETeam team;
     [SerializeField] Button button;
     [SerializeField] Image imageBackground;
     [SerializeField] Image imageLogo;
-    [SerializeField] bool command; //True = IsSieging in ActionSystem to be true, vice-versa as well;
+    [SerializeField] EAction command;
     [SerializeField] private float fillDuration; //4f
     private ActionSystem actionSystem;
 
@@ -16,11 +17,12 @@ public class ActionPanel : MonoBehaviour
         this.actionSystem = ServiceLocator.Get<ActionSystem>();
         this.button.onClick.AddListener(() =>
         {
-            this.actionSystem.SetIsSieging(command);
+            this.actionSystem.SetEAction(team, command);
         });
-        this.actionSystem.OnIsSiegingChanged += HandleIsSiegingChanged;
 
-        StartCoroutine(updateUI());
+        this.actionSystem.OnEActionChanged += HandleIsSiegingChanged;
+
+        StartCoroutine(updateUI(this.actionSystem.GetEAction(team)));
     }
 
     void Update()
@@ -28,29 +30,27 @@ public class ActionPanel : MonoBehaviour
 
     }
 
-    private void HandleIsSiegingChanged()
+    private void HandleIsSiegingChanged(ETeam team, EAction action)
     {
-        StartCoroutine(updateUI());
+        StartCoroutine(updateUI(action));
     }
 
 
-    private IEnumerator updateUI()
+    private IEnumerator updateUI(EAction action)
     {
         button.interactable = false;
 
-        bool isSieging = this.actionSystem.GetIsSieging();
-
         Color colorBackground = this.imageBackground.color;
-        colorBackground.a = isSieging == command ? 1f : 0.5f;
+        colorBackground.a = action == command ? 1f : 0.5f;
         this.imageBackground.color = colorBackground;
 
         Color colorLogo = this.imageLogo.color;
-        colorLogo.a = isSieging == command ? 1f : 0.5f;
+        colorLogo.a = action == command ? 1f : 0.5f;
         this.imageLogo.color = colorLogo;
 
         yield return StartCoroutine(EnableButtonAfterFill());
 
-        this.button.interactable = isSieging == command ? false : true;
+        this.button.interactable = action == command ? false : true;
     }
 
     private IEnumerator EnableButtonAfterFill()

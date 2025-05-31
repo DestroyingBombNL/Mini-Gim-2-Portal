@@ -11,14 +11,14 @@ public class Archer : Unit
         base.Start();  // Calls Unit.Start()
 
         OnMoving += HandleOnMoving;
-        this.actionSystem.OnIsSiegingChanged += TriggerOnMoving;
+        this.actionSystem.OnEActionChanged += TriggerOnMoving;
         
         OnAttacking += HandleOnAttacking;
         OnDefending += HandleOnDefending;
         OnSieging += HandleOnSieging;
 
         rb2D.constraints = RigidbodyConstraints2D.FreezePositionY;
-        TriggerOnMoving();
+        TriggerOnMoving(team, this.actionSystem.GetEAction(team));
     }
 
     public override void Update()
@@ -45,6 +45,7 @@ public class Archer : Unit
         //Debug.Log(unitType.ToString() + " is sieging...");
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(AttackBaseUntilDestroyed());
+        isSieging = true;
     }
 
     private IEnumerator Idle()
@@ -61,6 +62,14 @@ public class Archer : Unit
             this.animator.Play("Attacking");
             StartCoroutine(SpawnLaserWithDelay(laserSpawnDelay));
 
+            float duration = GetAnimationLength(animator, "Attacking");
+            yield return new WaitForSeconds(duration);
+
+            if (targetEnemy == null)
+            {
+                break;
+            }
+
             // Deal damage
             IUnit unit = targetEnemy.GetComponent<IUnit>();
 
@@ -68,13 +77,10 @@ public class Archer : Unit
             {
                 break;
             }
-
-            float duration = GetAnimationLength(animator, "Attacking");
-            yield return new WaitForSeconds(duration);
         }
 
         // Enemy was destroyed or set to null
-        TriggerOnMoving();
+        TriggerOnMoving(team, this.actionSystem.GetEAction(team));
     }
 
     private IEnumerator SpawnLaserWithDelay(float delay)
@@ -107,6 +113,12 @@ public class Archer : Unit
         if (otherUnit != null && otherUnit.GetTeam() != this.team)
         {
             targetEnemy = other.gameObject;
+            Vector3 scale = transform.localScale;
+
+            // Flip sprite based on direction
+            bool isToRight = transform.position.x > other.gameObject.transform.position.x;
+            scale.x = isToRight ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+            transform.localScale = scale;
             TriggerOnAttacking();
         }
     }

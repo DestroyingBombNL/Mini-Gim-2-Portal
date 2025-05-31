@@ -10,50 +10,35 @@ public class UnitPrefabEntry
 }
 
 [System.Serializable]
-public class TeamPassiveEnergyGainEntry
+public class TeamUnitEntry
 {
     public ETeam team;
-    public int passiveEnergyGain;
+    public int health;
+    public Transform spawnerTransform;
+    public Transform defendTransform;
+    public Transform siegeTransform;
+    public Transform unitContainerTransform;
+    public UnitPrefabEntry[] unitPrefabEntries;
 }
-
-[System.Serializable]
-public class TeamPassiveEnergyGainEntry
-{
-    public ETeam team;
-    public int passiveEnergyGain;
-}
-
-[System.Serializable]
-public class TeamPassiveEnergyGainEntry
-{
-    public ETeam team;
-    public int passiveEnergyGain;
-}
-
-[System.Serializable]
-public class TeamPassiveEnergyGainEntry
-{
-    public ETeam team;
-    public int passiveEnergyGain;
-}
-
 
 public class UnitSystem : MonoBehaviour, IUnitSystem
 {
-    [SerializeField] private List<UnitPrefabEntry> unitPrefabList;
-    [SerializeField] private TeamHealthEntry[] TeamHealthEntries;
-    [SerializeField] private TeamSpawnerTransformEntry[] TeamSpawnerTransformEntries;
-    [SerializeField] private TeamDefendTransformEntry[] TeamDefendTransformEntries;
-    [SerializeField] private TeamSiegeTransformEntry[] TeamSiegeTransformEntries;
-    [SerializeField] private TeamUnitContainerTransformEntry[] TeamUnitContainerTransformEntries;
-
+    [SerializeField] private float spawnYOffsetMin; //0.25f
+    [SerializeField] private float spawnYOffsetMax; //0.5f
+    [SerializeField] private TeamUnitEntry[] teamUnitEntries;
+    [SerializeField] private int playerUnitHealthBuff;
+    private Dictionary<ETeam, TeamUnitEntry> teamMap = new();
     private IEnergySystem energySystem;
 
     void Awake()
     {
-        foreach (var entry in teamEnergies)
+        foreach (var entry in teamUnitEntries)
         {
-            teamEnergyMap[entry.team] = entry.energy;
+            teamMap[entry.team] = entry;
+            if (entry.team == ETeam.Ally)
+            {
+                teamMap[entry.team].health += playerUnitHealthBuff;
+            }
         }
     }
 
@@ -62,27 +47,24 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         this.energySystem = ServiceLocator.Get<EnergySystem>();
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(ETeam team, int damage)
     {
-        health -= damage;
-        if (health <= 0)
+        ETeam teamWhichTakesDamage = ETeam.Ally == team ? ETeam.Enemy : ETeam.Ally; //Needs tp be reversed, units give the team they are on as parameter
+        teamMap[teamWhichTakesDamage].health -= damage;
+        if (teamMap[teamWhichTakesDamage].health <= 0)
         {
-            OnDefeated();
+            OnDefeated(teamWhichTakesDamage);
         }
     }
 
-    public ETeam GetTeam()
+    public void SpawnUnit(ETeam team, EUnit unitType)
     {
-        return this.team;
-    }
+        var entry = teamMap[team];
+        GameObject unitGameObject = getUnitGameObject(team, unitType);
 
-    public void SpawnUnit(EUnit unitType)
-    {
-        GameObject unitGameObject = getUnitGameObject(unitType);
-
-        if (this.energySystem == null)
+        if (energySystem == null)
         {
-            this.energySystem = ServiceLocator.Get<EnergySystem>();
+            energySystem = ServiceLocator.Get<EnergySystem>();
         }
 
         if (unitGameObject == null)
@@ -92,35 +74,53 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         }
 
         IUnit unitScript = unitGameObject.GetComponent<IUnit>();
-        if (this.energySystem.RemoveEnergy(team, unitScript))
+        if (energySystem.RemoveEnergy(team, unitScript))
         {
-            Vector3 spawnPosition = this.transform.position;
+            Vector3 spawnPosition = teamMap[team].spawnerTransform.position;
             spawnPosition.y += UnityEngine.Random.Range(spawnYOffsetMin, spawnYOffsetMax);
-            GameObject instantiatedUnit = Instantiate(unitGameObject, spawnPosition, Quaternion.identity, unitContainerTransform);
+            GameObject instantiatedUnit = Instantiate(unitGameObject, spawnPosition, Quaternion.identity, entry.unitContainerTransform);
             IUnit instantiatedUnitScript = instantiatedUnit.GetComponent<IUnit>();
-            instantiatedUnitScript.SetSpawnerTransform(spawnerTransform);
-            instantiatedUnitScript.SetDefendTransform(defendTransform);
-            instantiatedUnitScript.SetSiegeTransform(siegeTransform);
+            instantiatedUnitScript.SetSpawnerTransform(entry.spawnerTransform);
+            instantiatedUnitScript.SetDefendTransform(entry.defendTransform);
+            instantiatedUnitScript.SetSiegeTransform(entry.siegeTransform);
+            instantiatedUnitScript.SetTeam(team);
+        }
+        else
+        {
+            Debug.Log("Not enough energy to spawn unit!");
         }
     }
 
-    public void OnDefeated()
+    private void OnDefeated(ETeam teamWhoLost)
     {
-        Debug.Log("Game Over");
+        if (teamWhoLost == ETeam.Ally)
+        {
+            Debug.Log("Game Over");
+        }
+        else
+        {
+            Debug.Log("Victorious");
+        }
+        Time.timeScale = 0f;
     }
 
-    public GameObject getUnitGameObject(EUnit unitType)
+    public GameObject getUnitGameObject(ETeam team, EUnit unitType)
     {
-        GameObject unitGameObject = null;
+        var unitEntries = teamMap[team].unitPrefabEntries;
 
-        foreach (var entry in unitPrefabList)
+        foreach (var entry in unitEntries)
         {
             if (entry.unit == unitType)
             {
-                unitGameObject = entry.prefab;
-                break;
+                return entry.prefab;
             }
         }
-        return unitGameObject;
+
+        return null;
+    }
+
+    public Transform getSiegeTransform(ETeam team)
+    {
+        return teamMap[team].siegeTransform;
     }
 }

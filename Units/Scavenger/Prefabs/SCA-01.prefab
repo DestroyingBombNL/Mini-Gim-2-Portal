@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 4155838855447314277}
   - component: {fileID: 6697431797865060773}
   - component: {fileID: 1035103833059549962}
-  - component: {fileID: 5139105542401607157}
   - component: {fileID: 3951770776140541385}
+  - component: {fileID: 302227696127100712}
   m_Layer: 0
   m_Name: SCA-01
   m_TagString: Untagged
@@ -125,22 +125,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31f0fcf2a043ea84d837187f82fe493a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  team: 0
   unitType: 0
   health: 5
   damage: 0
-  speed: 3
+  speed: 2
   range: 2
-  energyCost: 75
+  energyCost: 100
   animator: {fileID: 6697431797865060773}
-  circleCollider2D: {fileID: 5139105542401607157}
+  boxCollider2D: {fileID: 302227696127100712}
   rb2D: {fileID: 3951770776140541385}
   spriteRenderer: {fileID: 4155838855447314277}
   sortingOffset: 1000
   fruitPrefab: {fileID: 2686121552450224345, guid: 28445fcdbefce2a4882775ece3cb7d9d, type: 3}
   transformsYOffSet: 1
---- !u!58 &5139105542401607157
-CircleCollider2D:
+--- !u!50 &3951770776140541385
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8612283941500411222}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
+--- !u!61 &302227696127100712
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -169,36 +195,19 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 2
---- !u!50 &3951770776140541385
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8612283941500411222}
-  m_BodyType: 2
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Offset: {x: -0.016149879, y: -0.25839794}
+  m_SpriteTilingProperty:
+    border: {x: 0.505, y: 1.055, z: 0.39999998, w: 0.59999996}
+    pivot: {x: 0.50645995, y: 0.60335916}
+    oldSize: {x: 2.5, y: 2.5}
+    newSize: {x: 2.5, y: 2.5}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 2.5, y: 15}
+  m_EdgeRadius: 0

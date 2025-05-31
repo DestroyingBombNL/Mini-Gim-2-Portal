@@ -19,7 +19,7 @@ public class UnitPanel : MonoBehaviour
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
         this.energySystem = ServiceLocator.Get<EnergySystem>();
 
-        GameObject unit = this.unitSystem.getUnitGameObject(unitType);
+        GameObject unit = this.unitSystem.getUnitGameObject(team, unitType);
 
         string unitName = unit.name; //Name of the prefab
         Sprite unitSprite = unit.GetComponent<SpriteRenderer>().sprite;
@@ -31,7 +31,7 @@ public class UnitPanel : MonoBehaviour
 
         this.button.onClick.AddListener(() =>
         {
-            this.unitSystem.SpawnUnit(unitType);
+            this.unitSystem.SpawnUnit(team, unitType);
         });
 
         energySystem.OnEnergyChanged += UpdateUI;

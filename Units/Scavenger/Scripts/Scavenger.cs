@@ -2,6 +2,14 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+public enum UnitAction
+{
+    Scavenging,
+    Collecting,
+    Returning,
+    OffLoading,
+}
+
 public class Scavenger : Unit
 {
     [SerializeField] private GameObject fruitPrefab;
@@ -15,6 +23,7 @@ public class Scavenger : Unit
     private Action OnCollecting;
     private Action OnReturning;
     private Action OnOffLoading;
+    private UnitAction currentActionState;
 
     public override void Start()
     {
@@ -46,7 +55,7 @@ public class Scavenger : Unit
         this.targetTreeScript.RemoveScavenger(this);
         Destroy(this.gameObject);
     }
-    
+
     protected override IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
     {
         Vector3 scale = transform.localScale;
@@ -78,7 +87,7 @@ public class Scavenger : Unit
 
         onArrive?.Invoke();
     }
-    
+
     private void TriggerScavenging() => OnScavenging?.Invoke();
     private void TriggerCollecting() => OnCollecting?.Invoke();
     private void TriggerReturning() => OnReturning?.Invoke();
@@ -89,6 +98,7 @@ public class Scavenger : Unit
         //Debug.Log("Drone is scavenging...");
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(MoveAndAnimate(animator, new Vector3(targetTreeTransform.position.x, targetTreeTransform.position.y + transformsYOffSet, targetTreeTransform.position.z), "Scavenging", TriggerCollecting, 0.1f));
+        currentActionState = UnitAction.Scavenging;
     }
 
     private void HandleCollecting()
@@ -101,6 +111,7 @@ public class Scavenger : Unit
 
         IFruit collectedFruit = targetTreeScript.RemoveFruit(1);
         fruitInventory = collectedFruit;
+        currentActionState = UnitAction.Collecting;
     }
 
     private void HandleReturning()
@@ -109,6 +120,7 @@ public class Scavenger : Unit
         if (currentAction != null) StopCoroutine(currentAction);
         Vector3 modifiedSpawnerTransform = new Vector3(this.spawnerTransform.position.x, this.spawnerTransform.position.y + transformsYOffSet);
         currentAction = StartCoroutine(MoveAndAnimate(animator, modifiedSpawnerTransform, "Returning", TriggerOffLoading, 0.1f));
+        currentActionState = UnitAction.Returning;
     }
 
     private void HandleOffLoading()
@@ -119,6 +131,7 @@ public class Scavenger : Unit
 
         float floatAnimLength = PlayFruitAnimation("Drop");
         StartCoroutine(HandleFruitConsumption(floatAnimLength));
+        currentActionState = UnitAction.OffLoading;
     }
 
     private float PlayFruitAnimation(string animName)
@@ -138,4 +151,48 @@ public class Scavenger : Unit
         this.energySystem.AddEnergy(team, fruitInventory);
         this.fruitInventory = null;
     }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        IUnit otherUnit = other.GetComponent<IUnit>();
+
+        if (otherUnit != null && otherUnit.GetTeam() != this.team && !otherUnit.GetIsSieging())
+        {
+            if (currentAction != null) StopCoroutine(currentAction);
+            currentAction = StartCoroutine(HandleThreatCoroutine(otherUnit));
+        }
+    }
+
+    private IEnumerator HandleThreatCoroutine(IUnit otherUnit)
+    {
+        // Wait while the enemy unit is still a threat
+        while (otherUnit != null)
+        {
+            // Optionally do something like look at the enemy or trigger an animation
+            animator.Play("Idle");
+            yield return null; // Wait 1 frame
+        }
+
+        // Wait a little bit after the threat is gone
+        yield return new WaitForSeconds(1f);
+
+        // Resume the previous action
+        switch (currentActionState)
+        {
+            case UnitAction.OffLoading:
+                TriggerOffLoading();
+                break;
+            case UnitAction.Scavenging:
+                TriggerScavenging();
+                break;
+            case UnitAction.Collecting:
+                TriggerCollecting();
+                break;
+            case UnitAction.Returning:
+                TriggerReturning();
+                break;
+        }
+    }
+
+
 }

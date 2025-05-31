@@ -1,6 +1,6 @@
 public interface IActionSystem
 {
-    public event System.Action OnIsSiegingChanged;
-    public bool GetIsSieging();
-    public void SetIsSieging(bool isSieging);
+    public event System.Action<ETeam, EAction> OnEActionChanged;
+    public EAction GetEAction(ETeam team);
+    public void SetEAction(ETeam team, EAction action);
 }

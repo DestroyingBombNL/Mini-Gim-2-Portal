@@ -1,18 +1,34 @@
+using System.Collections.Generic;
 using UnityEngine;
+[System.Serializable]
+public class TeamActionEntry
+{
+    public ETeam team;
+    public EAction action;
+}
 
 public class ActionSystem : MonoBehaviour, IActionSystem
 {
-    public event System.Action OnIsSiegingChanged;
-    [SerializeField] private bool isSieging; //true = sieging, false = defending
+    public event System.Action<ETeam, EAction> OnEActionChanged;
+    [SerializeField] private TeamActionEntry[] teamActionEntries;
+    private Dictionary<ETeam, TeamActionEntry> teamMap = new();
 
-    public bool GetIsSieging()
+    void Awake()
     {
-        return this.isSieging;
+        foreach (var entry in teamActionEntries)
+        {
+            teamMap[entry.team] = entry;
+        }
     }
 
-    public void SetIsSieging(bool isSieging)
+    public EAction GetEAction(ETeam team)
     {
-        this.isSieging = isSieging;
-        OnIsSiegingChanged?.Invoke();
+        return this.teamMap[team].action;
+    }
+
+    public void SetEAction(ETeam team, EAction action)
+    {
+        this.teamMap[team].action = action;
+        OnEActionChanged?.Invoke(team, this.teamMap[team].action);
     }
 }

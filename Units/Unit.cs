@@ -5,7 +5,6 @@ using UnityEngine;
 public class Unit : MonoBehaviour, IUnit
 {
     //Unity Editor Configurations
-    [SerializeField] protected ETeam team;
     [SerializeField] protected EUnit unitType;
     [SerializeField] protected int health;
     [SerializeField] protected int damage;
@@ -13,12 +12,13 @@ public class Unit : MonoBehaviour, IUnit
     [SerializeField] protected float range;
     [SerializeField] protected int energyCost;
     [SerializeField] protected Animator animator;
-    [SerializeField] protected CircleCollider2D circleCollider2D;
+    [SerializeField] protected BoxCollider2D boxCollider2D;
     [SerializeField] protected Rigidbody2D rb2D;
     [SerializeField] protected SpriteRenderer spriteRenderer;
     [SerializeField] protected int sortingOffset; //1000
 
     //Set by parent spawner
+    protected ETeam team;
     protected Transform spawnerTransform;
     protected Transform defendTransform;
     protected Transform siegeTransform;
@@ -29,11 +29,13 @@ public class Unit : MonoBehaviour, IUnit
 
     //Actions
     protected Action OnDefeated;
-    protected Action OnMoving;
+    protected Action<ETeam, EAction> OnMoving;
     protected Action OnAttacking;
     protected Action OnDefending;
     protected Action OnSieging;
     protected Coroutine currentAction;
+
+    protected bool isSieging = false;
 
     public virtual void Start()
     {
@@ -52,7 +54,7 @@ public class Unit : MonoBehaviour, IUnit
 
     protected void SetRange()
     {
-        circleCollider2D.radius = range;
+        this.boxCollider2D.size = new Vector2(range, boxCollider2D.size.y);
     }
 
     protected void SetSortingOrder()
@@ -61,7 +63,7 @@ public class Unit : MonoBehaviour, IUnit
     }
 
     protected void TriggerOnDefeated() => OnDefeated?.Invoke();
-    protected void TriggerOnMoving() => OnMoving?.Invoke();
+    protected void TriggerOnMoving(ETeam team, EAction eAction) => OnMoving?.Invoke(team, eAction);
     protected void TriggerOnAttacking() => OnAttacking?.Invoke();
     protected void TriggerOnDefending() => OnDefending?.Invoke();
     protected void TriggerOnSieging() => OnSieging?.Invoke();
@@ -74,16 +76,17 @@ public class Unit : MonoBehaviour, IUnit
         Destroy(this.gameObject);
     }
 
-    protected virtual void HandleOnMoving()
+    protected virtual void HandleOnMoving(ETeam team, EAction eAction)
     {
         //Debug.Log(unitType.ToString() + " is moving...");
+        if (team != this.team) return;
         if (currentAction != null) StopCoroutine(currentAction);
 
-        bool isSieging = this.actionSystem.GetIsSieging();
-        Action onArrive = isSieging ? TriggerOnSieging : TriggerOnDefending;
-        Transform location = isSieging ? siegeTransform : defendTransform;
+        Action onArrive = eAction == EAction.Siege ? TriggerOnSieging : TriggerOnDefending;
+        Transform location = eAction == EAction.Siege ? siegeTransform : defendTransform;
 
         currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
+        isSieging = false;
     }
 
     protected virtual IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
@@ -99,10 +102,19 @@ public class Unit : MonoBehaviour, IUnit
         transform.localScale = scale;
 
         // Adjust target based on direction and deviation
-        if (isToRight)
-            target.x -= deviation * 2f;
+        if (this.actionSystem.GetEAction(team) == EAction.Defend)
+        {
+            if (isToRight)
+            {
+                target.x -= deviation * 2f;
+            }
+            else
+            {
+                target.x += deviation * 2f;
+            }
+        }
 
-        if (!this.actionSystem.GetIsSieging())
+        if (this.actionSystem.GetEAction(team) == EAction.Defend)
         {
             float randomOffset = UnityEngine.Random.Range(-1.5f, 1.5f);
             target.x += randomOffset;
@@ -118,9 +130,12 @@ public class Unit : MonoBehaviour, IUnit
             yield return null;
         }
 
-        // Unflip sprite
-        scale.x = Mathf.Abs(scale.x);
-        transform.localScale = scale;
+        if (this.actionSystem.GetEAction(team) == EAction.Defend)
+        {
+            // Unflip sprite
+            scale.x = Mathf.Abs(scale.x);
+            transform.localScale = scale;
+        }
 
         onArrive?.Invoke();
     }
@@ -173,13 +188,22 @@ public class Unit : MonoBehaviour, IUnit
         return this.team;
     }
 
+    public void SetTeam(ETeam team)
+    {
+        this.team = team;
+    }
+
     public virtual void TakeDamage(int damage)
     {
         health -= damage;
         if (health <= 0)
         {
-            if (currentAction != null) StopCoroutine(currentAction);
             TriggerOnDefeated();
         }
+    }
+
+    public bool GetIsSieging()
+    {
+        return this.isSieging;
     }
 }

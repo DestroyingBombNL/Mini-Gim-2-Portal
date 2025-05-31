@@ -2,8 +2,8 @@ using UnityEngine;
 
 public interface IUnitSystem
 {
-    public void SpawnUnit(EUnit unitType);
-    public void TakeDamage(int damage);
-    public ETeam GetTeam();
-    public GameObject getUnitGameObject(EUnit unitType);
+    public void SpawnUnit(ETeam team, EUnit unitType);
+    public void TakeDamage(ETeam team, int damage);
+    public GameObject getUnitGameObject(ETeam team, EUnit unitType);
+    public Transform getSiegeTransform(ETeam team);
 }

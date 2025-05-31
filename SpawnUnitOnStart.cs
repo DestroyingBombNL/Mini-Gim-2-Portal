@@ -12,8 +12,8 @@ public class DefaultScavengerSpawn : MonoBehaviour
         this.energySystem = ServiceLocator.Get<EnergySystem>();
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
 
-        int unitEnergyCost = unitSystem.getUnitGameObject(unitType).GetComponent<IUnit>().GetEnergyCost();
+        int unitEnergyCost = unitSystem.getUnitGameObject(team, unitType).GetComponent<IUnit>().GetEnergyCost();
         this.energySystem.AddEnergy(team, unitEnergyCost);
-        this.unitSystem.SpawnUnit(unitType);
+        this.unitSystem.SpawnUnit(team, unitType);
     }
 }
