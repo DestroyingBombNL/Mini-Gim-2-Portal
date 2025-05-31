@@ -22,7 +22,7 @@ public class ActionPanel : MonoBehaviour
 
         this.actionSystem.OnEActionChanged += HandleIsSiegingChanged;
 
-        StartCoroutine(updateUI(this.actionSystem.GetEAction(team)));
+        StartCoroutine(updateUI(team, this.actionSystem.GetEAction(team)));
     }
 
     void Update()
@@ -32,25 +32,28 @@ public class ActionPanel : MonoBehaviour
 
     private void HandleIsSiegingChanged(ETeam team, EAction action)
     {
-        StartCoroutine(updateUI(action));
+        StartCoroutine(updateUI(team, action));
     }
 
 
-    private IEnumerator updateUI(EAction action)
+    private IEnumerator updateUI(ETeam team, EAction action)
     {
-        button.interactable = false;
+        if (this.team == team)
+        {
+            button.interactable = false;
+            Color colorBackground = this.imageBackground.color;
+            colorBackground.a = action == command ? 1f : 0.5f;
+            this.imageBackground.color = colorBackground;
 
-        Color colorBackground = this.imageBackground.color;
-        colorBackground.a = action == command ? 1f : 0.5f;
-        this.imageBackground.color = colorBackground;
+            Color colorLogo = this.imageLogo.color;
+            colorLogo.a = action == command ? 1f : 0.5f;
+            this.imageLogo.color = colorLogo;
 
-        Color colorLogo = this.imageLogo.color;
-        colorLogo.a = action == command ? 1f : 0.5f;
-        this.imageLogo.color = colorLogo;
+            yield return StartCoroutine(EnableButtonAfterFill());
 
-        yield return StartCoroutine(EnableButtonAfterFill());
-
-        this.button.interactable = action == command ? false : true;
+            this.button.interactable = action == command ? false : true;
+        }
+        yield break;
     }
 
     private IEnumerator EnableButtonAfterFill()

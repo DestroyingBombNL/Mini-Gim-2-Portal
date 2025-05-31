@@ -6,8 +6,8 @@ using UnityEngine;
 public class Tank : Unit
 {
     private bool isFortified = false;
-    private readonly List<GameObject> nearbyEnemies = new();
     private Coroutine fortifyCoroutine;
+    private readonly List<GameObject> nearbyEnemies = new();
 
     public override void Start()
     {
@@ -87,7 +87,10 @@ public class Tank : Unit
 
     protected override void HandleOnMoving(ETeam team, EAction eAction)
     {
-        StartCoroutine(HandleOnMovingCoroutine(team, eAction));
+        if (this)
+        {
+            StartCoroutine(HandleOnMovingCoroutine(team, eAction));
+        }
     }
 
     private IEnumerator HandleOnMovingCoroutine(ETeam team, EAction eAction)
@@ -118,84 +121,32 @@ public class Tank : Unit
         isSieging = false;
     }
 
-
-    // protected override IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
-    // {
-    //     // Cache original Y so we never modify it
-    //     float originalY = rb2D.position.y;
-
-    //     Vector3 scale = transform.localScale;
-
-    //     // Flip sprite based on direction
-    //     bool isToRight = transform.position.x > target.x;
-    //     scale.x = isToRight ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
-    //     transform.localScale = scale;
-
-    //     // Adjust target based on direction and deviation
-    //     if (this.actionSystem.GetEAction(team) == EAction.Defend)
-    //     {
-    //         if (isToRight)
-    //         {
-    //             target.x -= deviation * 2f;
-    //         }
-    //         else
-    //         {
-    //             target.x += deviation * 2f;
-    //         }
-    //     }
-
-    //     if (this.actionSystem.GetEAction(team) == EAction.Defend)
-    //     {
-    //         float randomOffset = UnityEngine.Random.Range(-1.5f, 1.5f);
-    //         target.x += randomOffset;
-    //     }
-
-    //     animator.Play(animName);
-
-    //     // Move via Rigidbody2D so constraints are honored
-    //     while (Mathf.Abs(rb2D.position.x - target.x) > deviation)
-    //     {
-    //         float newX = Mathf.MoveTowards(rb2D.position.x, target.x, speed * Time.deltaTime);
-    //         rb2D.MovePosition(new Vector2(newX, originalY));
-    //         yield return null;
-    //     }
-
-    //     if (this.actionSystem.GetEAction(team) == EAction.Defend)
-    //     {
-    //         // Unflip sprite
-    //         scale.x = Mathf.Abs(scale.x);
-    //         transform.localScale = scale;
-    //     }
-
-    //     onArrive?.Invoke();
-    // }
-
     private void OnTriggerEnter2D(Collider2D other)
     {
-        IUnit otherUnit = other.GetComponent<IUnit>();
-        if (otherUnit != null && otherUnit.GetTeam() != this.team)
+        if (other)
         {
-            if (!nearbyEnemies.Contains(other.gameObject))
+            IUnit otherUnit = other.GetComponent<IUnit>();
+            if (otherUnit != null && otherUnit.GetTeam() != this.team)
+            {
                 nearbyEnemies.Add(other.gameObject);
 
-            if (!isFortified)
-            {
-                Vector3 scale = transform.localScale;
+                if (!isFortified && !isSieging)
+                {
+                    Vector3 scale = transform.localScale;
 
-                // Flip sprite based on direction
-                bool isToRight = transform.position.x > other.gameObject.transform.position.x;
-                scale.x = isToRight ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
-                transform.localScale = scale;
-                TriggerOnAttacking();
+                    // Flip sprite based on direction
+                    bool isToRight = transform.position.x > other.gameObject.transform.position.x;
+                    scale.x = isToRight ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+                    transform.localScale = scale;
+                    TriggerOnAttacking();
+                }
             }
-
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (nearbyEnemies.Contains(other.gameObject))
-            nearbyEnemies.Remove(other.gameObject);
+        nearbyEnemies.Remove(other.gameObject);
 
         if (nearbyEnemies.Count == 0 && isFortified)
             TriggerOnMoving(team, this.actionSystem.GetEAction(team));

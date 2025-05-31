@@ -9,6 +9,7 @@ public class Laser : MonoBehaviour, ILaser
     private ETeam team;
     private int damage;
     private UnitSystem unitSystem;
+    private IUnit selectedUnit;
 
     void Start()
     {
@@ -30,10 +31,16 @@ public class Laser : MonoBehaviour, ILaser
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (selectedUnit != null)
+        {
+            return;
+        }
+        
         // Unit
         IUnit unit = other.GetComponent<IUnit>();
         if (unit != null && unit.GetTeam() != this.team)
         {
+            this.selectedUnit = unit;
             unit.TakeDamage(damage);
             Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
             Destroy(this.gameObject);

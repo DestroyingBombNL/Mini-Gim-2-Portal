@@ -57,7 +57,7 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         }
     }
 
-    public void SpawnUnit(ETeam team, EUnit unitType)
+    public bool SpawnUnit(ETeam team, EUnit unitType)
     {
         var entry = teamMap[team];
         GameObject unitGameObject = getUnitGameObject(team, unitType);
@@ -70,7 +70,7 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
         if (unitGameObject == null)
         {
             Debug.LogError($"No prefab found for unit type {unitType}");
-            return;
+            return false;
         }
 
         IUnit unitScript = unitGameObject.GetComponent<IUnit>();
@@ -84,10 +84,12 @@ public class UnitSystem : MonoBehaviour, IUnitSystem
             instantiatedUnitScript.SetDefendTransform(entry.defendTransform);
             instantiatedUnitScript.SetSiegeTransform(entry.siegeTransform);
             instantiatedUnitScript.SetTeam(team);
+            return true;
         }
         else
         {
             Debug.Log("Not enough energy to spawn unit!");
+            return false;
         }
     }
 

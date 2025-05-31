@@ -26,6 +26,7 @@ public class Unit : MonoBehaviour, IUnit
     //Services
     protected UnitSystem unitSystem;
     protected ActionSystem actionSystem;
+    protected AudioSystem audioSystem;
 
     //Actions
     protected Action OnDefeated;
@@ -41,9 +42,10 @@ public class Unit : MonoBehaviour, IUnit
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
         this.actionSystem = ServiceLocator.Get<ActionSystem>();
+        this.audioSystem = ServiceLocator.Get<AudioSystem>();
         OnDefeated += HandleOnDefeated;
 
-        SetRange();
+        //SetRange();
         SetSortingOrder();
     }
 
@@ -78,15 +80,18 @@ public class Unit : MonoBehaviour, IUnit
 
     protected virtual void HandleOnMoving(ETeam team, EAction eAction)
     {
-        //Debug.Log(unitType.ToString() + " is moving...");
-        if (team != this.team) return;
-        if (currentAction != null) StopCoroutine(currentAction);
+        if (this)
+        {
+            //Debug.Log(unitType.ToString() + " is moving...");
+            if (team != this.team) return;
+            if (currentAction != null) StopCoroutine(currentAction);
 
-        Action onArrive = eAction == EAction.Siege ? TriggerOnSieging : TriggerOnDefending;
-        Transform location = eAction == EAction.Siege ? siegeTransform : defendTransform;
+            Action onArrive = eAction == EAction.Siege ? TriggerOnSieging : TriggerOnDefending;
+            Transform location = eAction == EAction.Siege ? siegeTransform : defendTransform;
 
-        currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
-        isSieging = false;
+            currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
+            isSieging = false;
+        }
     }
 
     protected virtual IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
@@ -104,11 +109,11 @@ public class Unit : MonoBehaviour, IUnit
         // Adjust target based on direction and deviation
         if (this.actionSystem.GetEAction(team) == EAction.Defend)
         {
-            if (isToRight)
+            if (team == ETeam.Ally && isToRight)
             {
                 target.x -= deviation * 2f;
             }
-            else
+            else if (team == ETeam.Enemy && !isToRight)
             {
                 target.x += deviation * 2f;
             }
@@ -116,7 +121,7 @@ public class Unit : MonoBehaviour, IUnit
 
         if (this.actionSystem.GetEAction(team) == EAction.Defend)
         {
-            float randomOffset = UnityEngine.Random.Range(-1.5f, 1.5f);
+            float randomOffset = UnityEngine.Random.Range(-0.25f, 0.25f);
             target.x += randomOffset;
         }
 
@@ -163,7 +168,7 @@ public class Unit : MonoBehaviour, IUnit
         Debug.LogWarning($"Animation '{animName}' not found!");
         return 1f;
     }
-
+    
     public int GetEnergyCost()
     {
         return this.energyCost;
@@ -186,6 +191,11 @@ public class Unit : MonoBehaviour, IUnit
     public ETeam GetTeam()
     {
         return this.team;
+    }
+
+    public EUnit GetUnitType()
+    {
+        return this.unitType;
     }
 
     public void SetTeam(ETeam team)

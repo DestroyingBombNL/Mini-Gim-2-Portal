@@ -106,7 +106,7 @@ MonoBehaviour:
   unitType: 1
   health: 10
   damage: 10
-  speed: 5.9
+  speed: 4
   range: 3
   energyCost: 350
   animator: {fileID: 6182586785534615819}
