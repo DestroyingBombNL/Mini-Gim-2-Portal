@@ -42,7 +42,7 @@ public class Tree : MonoBehaviour, ITree
             if (this.scavengers[i] == scavenger)
             {
                 this.scavengers[i] = null;
-                this.treeSystem.ReduceScavengerSpotsAvailable(team, 1);
+                this.treeSystem.IncreaseScavengerSpotsAvailable(team, 1);
                 break;
             }
         }

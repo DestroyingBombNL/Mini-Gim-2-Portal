@@ -78,6 +78,6 @@ public class AutoSpawner : MonoBehaviour
 
     private void ResetSpawnTimer()
     {
-        spawnTimer = Random.Range(1f, 2f); // Random delay between spawns
+        spawnTimer = Random.Range(0.5f, 1f); // Random delay between spawns
     }
 }
