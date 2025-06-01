@@ -12,15 +12,15 @@ public class CameraController : MonoBehaviour
     private Vector3 lastMousePosition;
     private float cameraHalfWidth;
 
-    void Start()
+    void Awake()
     {
         currentMoveSpeed = initialMoveSpeed;
 
         Bounds combinedBounds = CalculateCombinedBounds(environmentTransform);
         cameraHalfWidth = Camera.main.orthographicSize * Camera.main.aspect;
 
-        minX = combinedBounds.min.x + cameraHalfWidth;
-        maxX = combinedBounds.max.x - cameraHalfWidth;
+        minX = combinedBounds.min.x + cameraHalfWidth + 0.1f;
+        maxX = combinedBounds.max.x - cameraHalfWidth - 0.1f;
     }
 
     void Update()

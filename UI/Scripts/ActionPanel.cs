@@ -11,13 +11,24 @@ public class ActionPanel : MonoBehaviour
     [SerializeField] EAction command;
     [SerializeField] private float fillDuration; //4f
     private ActionSystem actionSystem;
+    private AudioSystem audioSystem;
 
     void Start()
     {
         this.actionSystem = ServiceLocator.Get<ActionSystem>();
+        this.audioSystem = ServiceLocator.Get<AudioSystem>();
+
         this.button.onClick.AddListener(() =>
         {
             this.actionSystem.SetEAction(team, command);
+            if (command == EAction.Siege)
+            {
+                this.audioSystem.PlaySFX(this.audioSystem.GetAudioClipBasedOnName("SiegeCommand"), 1f, 0f);
+            }
+            else if (command == EAction.Defend)
+            {
+                this.audioSystem.PlaySFX(this.audioSystem.GetAudioClipBasedOnName("DefendCommand"), 1f, 0f);
+            }
         });
 
         this.actionSystem.OnEActionChanged += HandleIsSiegingChanged;
@@ -32,7 +43,10 @@ public class ActionPanel : MonoBehaviour
 
     private void HandleIsSiegingChanged(ETeam team, EAction action)
     {
-        StartCoroutine(updateUI(team, action));
+        if (this)
+        {
+            StartCoroutine(updateUI(team, action)); 
+        }
     }
 
 

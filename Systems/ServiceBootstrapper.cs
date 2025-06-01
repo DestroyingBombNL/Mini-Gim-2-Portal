@@ -7,6 +7,7 @@ public class ServiceBootstrapper : MonoBehaviour
     [SerializeField] private EnergySystem energySystem;
     [SerializeField] private ActionSystem actionSystem;
     [SerializeField] private AudioSystem audioSystem;
+    [SerializeField] private GameStateSystem gameStateSystem;
 
     void Awake()
     {
@@ -15,5 +16,6 @@ public class ServiceBootstrapper : MonoBehaviour
         ServiceLocator.Register(energySystem);
         ServiceLocator.Register(actionSystem);
         ServiceLocator.Register(audioSystem);
+        ServiceLocator.Register(gameStateSystem);
     }
 }

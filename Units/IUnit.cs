@@ -11,4 +11,5 @@ public interface IUnit
     public void TakeDamage(int damage);
     public int GetEnergyCost();
     public bool GetIsSieging();
+    public void MultiplyMovementSpeedBy(int multiplier);
 }

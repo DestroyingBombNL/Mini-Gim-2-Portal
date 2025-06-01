@@ -17,6 +17,7 @@ public class AudioSystem : MonoBehaviour
     [Header("Sound Effects")]
     [SerializeField] private AudioClip[] soundEffects;
 
+    [SerializeField] private AudioClip introSong;
     private int currentTrackIndex = 0;
     private Coroutine playlistCoroutine;
 
@@ -32,13 +33,29 @@ public class AudioSystem : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
+    public void MuteSoundEffects()
     {
-        StartPlaylist();
+        sfxSource.enabled = false;
+    }
+
+    public void UnmuteSoundEffects()
+    {
+        sfxSource.Stop();
+        sfxSource.enabled = true;
+        sfxSource.Stop();
+    }
+
+    public void PlayIntroSong()
+    {
+        musicSource.clip = introSong;
+        musicSource.volume = 0.5f;
+        musicSource.Play();
     }
 
     public void StartPlaylist()
     {
+        musicSource.Stop();
+        musicSource.volume = 1f;
         if (playlistCoroutine != null)
             StopCoroutine(playlistCoroutine);
 
@@ -69,10 +86,7 @@ public class AudioSystem : MonoBehaviour
 
     public void PlaySFX(AudioClip clip, float volume = 1f, float delay = 0f)
     {
-        if (clip)
-        {
-            StartCoroutine(PlaySFXDelayed(clip, volume, delay));
-        }
+        StartCoroutine(PlaySFXDelayed(clip, volume, delay));
     }
 
     private IEnumerator PlaySFXDelayed(AudioClip clip, float volume, float delay)

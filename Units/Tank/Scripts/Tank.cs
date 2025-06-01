@@ -155,6 +155,10 @@ public class Tank : Unit
     public override void TakeDamage(int amount)
     {
         int adjustedDamage = isFortified ? Mathf.FloorToInt(amount * 0.5f) : amount;
+        if (isFortified)
+        {
+            this.audioSystem.PlaySFX(this.audioSystem.GetAudioClipBasedOnName("TankHit"), 0.2f, 0f);
+        }
         base.TakeDamage(adjustedDamage);
     }
 }

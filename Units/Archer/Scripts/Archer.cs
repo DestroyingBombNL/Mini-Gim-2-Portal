@@ -61,6 +61,7 @@ public class Archer : Unit
     {
         while (enemiesInRange.Count > 0)
         {
+            this.isAttacking = true;
             this.animator.Play("Attacking");
             this.audioSystem.PlaySFX(this.audioSystem.GetAudioClipBasedOnName("ArcherAttack"), 0.2f, 0.5f);
             StartCoroutine(SpawnLaserWithDelay(laserSpawnDelay));
@@ -72,7 +73,14 @@ public class Archer : Unit
             {
                 break;
             }
+
+            if (!enemiesInRange[0])
+            {
+                break;
+            }
         }
+        
+        this.isAttacking = false;
 
         // Enemy was destroyed or set to null
         TriggerOnMoving(team, this.actionSystem.GetEAction(team));

@@ -91,4 +91,13 @@ public class TreeSystem : MonoBehaviour, ITreeSystem
     {
         return scavengerSpotsAvailable[team];
     }
+
+    public void RepopulateAllTreesWithFruit(ETeam team)
+    {
+        foreach (var tree in teamTreeMap[team])
+        {
+            ITree treeScript = tree.GetComponent<ITree>();
+            treeScript.PopulateFruits();
+        }
+    }
 }

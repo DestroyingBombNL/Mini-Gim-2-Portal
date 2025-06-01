@@ -37,6 +37,7 @@ public class Unit : MonoBehaviour, IUnit
     protected Coroutine currentAction;
 
     protected bool isSieging = false;
+    protected bool isAttacking = false;
 
     public virtual void Start()
     {
@@ -45,7 +46,7 @@ public class Unit : MonoBehaviour, IUnit
         this.audioSystem = ServiceLocator.Get<AudioSystem>();
         OnDefeated += HandleOnDefeated;
 
-        //SetRange();
+        SetRange();
         SetSortingOrder();
     }
 
@@ -54,9 +55,15 @@ public class Unit : MonoBehaviour, IUnit
 
     }
 
+    public void MultiplyMovementSpeedBy(int multiplier)
+    {
+        this.speed *= multiplier;
+    }
+    
     protected void SetRange()
     {
-        this.boxCollider2D.size = new Vector2(range, boxCollider2D.size.y);
+        float randomizedRange = range * UnityEngine.Random.Range(0.7f, 1.3f);
+        this.boxCollider2D.size = new Vector2(randomizedRange, boxCollider2D.size.y);
     }
 
     protected void SetSortingOrder()
@@ -72,7 +79,7 @@ public class Unit : MonoBehaviour, IUnit
 
     protected virtual void HandleOnDefeated()
     {
-        Debug.Log("Unit got defeated...");
+        //Debug.Log("Unit got defeated...");
         if (currentAction != null) StopCoroutine(currentAction);
 
         Destroy(this.gameObject);
@@ -82,17 +89,32 @@ public class Unit : MonoBehaviour, IUnit
     {
         if (this)
         {
-            //Debug.Log(unitType.ToString() + " is moving...");
             if (team != this.team) return;
-            if (currentAction != null) StopCoroutine(currentAction);
 
-            Action onArrive = eAction == EAction.Siege ? TriggerOnSieging : TriggerOnDefending;
-            Transform location = eAction == EAction.Siege ? siegeTransform : defendTransform;
-
-            currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
-            isSieging = false;
+            StartCoroutine(WaitUntilNotAttackingAndMove(eAction));
         }
     }
+
+    protected IEnumerator WaitUntilNotAttackingAndMove(EAction eAction)
+    {
+        // Wait until not attacking
+        while (isAttacking)
+        {
+            yield return null;
+        }
+
+        // Stop any current movement
+        if (currentAction != null) StopCoroutine(currentAction);
+
+        // Determine destination and arrival callback
+        Action onArrive = eAction == EAction.Siege ? TriggerOnSieging : TriggerOnDefending;
+        Transform location = eAction == EAction.Siege ? siegeTransform : defendTransform;
+
+        // Start movement
+        currentAction = StartCoroutine(MoveAndAnimate(this.animator, location.position, "Moving", onArrive, 0.9f + range));
+        isSieging = false;
+    }
+
 
     protected virtual IEnumerator MoveAndAnimate(Animator animator, Vector3 target, string animName, Action onArrive, float deviation)
     {

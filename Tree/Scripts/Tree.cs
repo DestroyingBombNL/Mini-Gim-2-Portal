@@ -14,7 +14,7 @@ public class Tree : MonoBehaviour, ITree
         this.treeSystem = ServiceLocator.Get<TreeSystem>();
         PopulateFruits();
     }
-    private void PopulateFruits()
+    public void PopulateFruits()
     {
         for (int i = 0; i < fruits.Length; i++)
         {

@@ -23,6 +23,23 @@ public class EnemyAISpawner : MonoBehaviour
     private EUnit favoriteUnit;
     private System.Random random = new();
 
+    public void Initialize()
+    {
+        foreach (var entry in teamUnitsGameObjectEntries)
+        {
+            teamUnitsGameObjectMap[entry.team] = entry.units;
+        }
+        this.unitSystem = ServiceLocator.Get<UnitSystem>();
+        this.actionSystem = ServiceLocator.Get<ActionSystem>();
+        favoriteUnit = (EUnit)UnityEngine.Random.Range(0, Enum.GetValues(typeof(EUnit)).Length);
+
+        DetermineNextUnit();
+        this.actionSystem.SetEAction(team, EAction.Defend);
+        nextActionTime = 0f;
+        nextUnitTime = 0f;
+        random = new();
+    } 
+
     void Awake()
     {
         foreach (var entry in teamUnitsGameObjectEntries)
@@ -35,21 +52,6 @@ public class EnemyAISpawner : MonoBehaviour
     {
         this.unitSystem = ServiceLocator.Get<UnitSystem>();
         this.actionSystem = ServiceLocator.Get<ActionSystem>();
-
-        favoriteUnit = (EUnit)UnityEngine.Random.Range(0, Enum.GetValues(typeof(EUnit)).Length);
-
-        DetermineNextUnit();
-        this.actionSystem.SetEAction(team, EAction.Defend);
-
-        // EUnit unitType = EUnit.Soldier;
-        // int unitEnergyCost = unitSystem.getUnitGameObject(team, unitType).GetComponent<IUnit>().GetEnergyCost();
-
-        // ServiceLocator.Get<EnergySystem>().AddEnergy(team, unitEnergyCost * 3);
-        // this.unitSystem.SpawnUnit(team, unitType);
-        // this.unitSystem.SpawnUnit(team, unitType);
-        // this.unitSystem.SpawnUnit(team, unitType);
-
-        // this.actionSystem.SetEAction(team, EAction.Siege);
     }
 
     void Update()
@@ -58,16 +60,15 @@ public class EnemyAISpawner : MonoBehaviour
         {
             nextActionTime = Time.time + UnityEngine.Random.Range(3f, 10f);
             DetermineNextEAction();
-            Debug.Log("Next Action: " + actionSystem.GetEAction(team));
+            //Debug.Log("Next Action: " + actionSystem.GetEAction(team));
         }
 
         if (Time.time >= nextUnitTime)
         {
             nextUnitTime = Time.time + UnityEngine.Random.Range(3f, 6f);
             DetermineNextUnit();
-            Debug.Log("Next Unit: " + this.unitOfChoice);
-            bool spawned = this.unitSystem.SpawnUnit(team, unitOfChoice);
-            Debug.Log("Spawned: " + spawned);
+            //Debug.Log("Next Unit: " + this.unitOfChoice);
+            StartCoroutine(this.unitSystem.SpawnUnitCoroutine(team, unitOfChoice));
         }
     }
 
@@ -174,8 +175,8 @@ public class EnemyAISpawner : MonoBehaviour
             // Calculate unit count difference (ai - ally)
             int unitDifference = unitCount - allyNonScavenger;
 
-            // Normalize difference to 0..1, 5 or more units difference = 1
-            float diffNormalized = Mathf.Clamp01(unitDifference / 5f);
+            // Normalize difference to 0..1, 10 or more units difference = 1
+            float diffNormalized = Mathf.Clamp01(unitDifference / 10f);
 
             // Apply exponential ramp-up (e.g. square for smooth low and strong high)
             float diffAggression = Mathf.Pow(diffNormalized, 2);
@@ -183,7 +184,7 @@ public class EnemyAISpawner : MonoBehaviour
             // Combine base aggression and difference aggression (e.g. weighted sum)
             float combinedAggression = Mathf.Clamp01(aggression + diffAggression);
 
-            if (combinedAggression > 0.8f)
+            if (combinedAggression > 0.85f)
                 actionSystem.SetEAction(team, EAction.Siege);
             else
                 actionSystem.SetEAction(team, EAction.Defend);

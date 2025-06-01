@@ -78,6 +78,7 @@ public class Soldier : Unit
     {
         while (enemiesInRange.Count > 0)
         {
+            this.isAttacking = true;
             this.animator.Play("Attacking");
             this.audioSystem.PlaySFX(this.audioSystem.GetAudioClipBasedOnName("SoldierAttack"), 0.2f, 1f);
             StartCoroutine(HitEffectDelay(effectDelay));
@@ -90,33 +91,20 @@ public class Soldier : Unit
                 break;
             }
 
+            if (!enemiesInRange[0])
+            {
+                break;
+            }
+
             // Deal damage
             IUnit unit = enemiesInRange[0].GetComponent<IUnit>();
             unit.TakeDamage(this.damage);
         }
 
+        this.isAttacking = false;
+
         // Enemy was destroyed or set to null
         TriggerOnMoving(team, this.actionSystem.GetEAction(team));
-    }
-
-    protected void SearchForNewEnemy()
-    {
-        float detectionRadius = this.boxCollider2D.size.x;
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius);
-
-        foreach (var hit in hits)
-        {
-            IUnit nearbyUnit = hit.GetComponent<IUnit>();
-            if (nearbyUnit != null && nearbyUnit.GetTeam() != this.team)
-            {
-                OnTriggerEnter2D(hit);
-                break;
-            }
-            else
-            {
-                TriggerOnMoving(team, this.actionSystem.GetEAction(team));
-            }
-        }
     }
 
     private IEnumerator AttackBaseUntilDestroyed()
